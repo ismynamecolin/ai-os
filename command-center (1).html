@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLAW · Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CLAW COMMAND CENTER — film prop dashboard
+   Fullscreen it (F11 / browser fullscreen), kill the lights, film.
+   All data comes from CONFIG at the top of the <script> below.
+   ============================================================ */
+:root{
+  --ink:#0b0c0a;
+  --panel:#10120f;
+  --line:#1e241f;
+  --teal:#0f3d3e;
+  --teal-glow:#2fa9a4;
+  --teal-soft:#6fd3ce;
+  --gold:#bd8b13;
+  --gold-glow:#e8b940;
+  --text:#c9d4cf;
+  --dim:#5c6a62;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{height:100%;background:var(--ink);overflow:hidden}
+body{height:calc(100% - 50px);background:var(--ink);overflow:hidden}
+body{
+  font-family:"Spline Sans Mono",monospace;color:var(--text);
+  display:grid;
+  grid-template-rows:64px 1fr 150px;
+  grid-template-columns:340px 1fr 320px;
+  grid-template-areas:
+    "head head head"
+    "log  orb  stats"
+    "brief brief brief";
+  gap:1px;
+}
+/* faint grid backdrop */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(47,169,164,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(47,169,164,.045) 1px,transparent 1px);
+  background-size:56px 56px;}
+
+.panel{background:var(--panel);border:1px solid var(--line);padding:22px 24px;position:relative;overflow:hidden}
+.ptitle{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.ptitle::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ===== HEADER ===== */
+.head{grid-area:head;background:var(--panel);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.brand{display:flex;align-items:center;gap:16px}
+.brand .claw{font-family:"Fraunces",serif;font-weight:900;font-size:26px;color:#f4efe3;letter-spacing:.02em}
+.brand .claw span{color:var(--gold-glow)}
+.brand .sub{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);border-left:1px solid var(--line);padding-left:16px}
+.chips{display:flex;gap:10px}
+.chip{font-size:10px;letter-spacing:.18em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--line);color:var(--dim)}
+.chip.on{color:var(--teal-soft);border-color:var(--teal);text-shadow:0 0 12px rgba(47,169,164,.6)}
+.chip.on::before{content:"● ";color:var(--teal-glow)}
+.clock{text-align:right}
+.clock .t{font-size:30px;font-weight:600;color:#f4efe3;letter-spacing:.06em;text-shadow:0 0 20px rgba(232,185,64,.25);font-variant-numeric:tabular-nums}
+.clock .d{font-size:10px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+
+/* ===== LOG ===== */
+.log{grid-area:log;display:flex;flex-direction:column}
+.logfeed{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:11px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 22%);mask-image:linear-gradient(to bottom,transparent,black 22%)}
+.line{font-size:13px;line-height:1.5;display:flex;gap:12px;opacity:0;transform:translateY(8px);animation:in .45s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.line .ts{color:var(--gold);flex-shrink:0;font-weight:500}
+.line .msg{color:var(--text)}
+.line.sys .msg{color:var(--dim)}
+.line.hot .msg{color:var(--teal-soft);text-shadow:0 0 14px rgba(47,169,164,.5)}
+.line.gold .msg{color:var(--gold-glow);text-shadow:0 0 14px rgba(232,185,64,.4)}
+
+/* ===== ORB ===== */
+.orb{grid-area:orb;background:transparent;border:none;position:relative;display:flex;align-items:center;justify-content:center}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.orbtag{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--dim)}
+.orbstate{position:absolute;top:26px;left:0;right:0;text-align:center;font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--teal-soft);text-shadow:0 0 16px rgba(47,169,164,.7)}
+
+/* ===== STATS ===== */
+.stats{grid-area:stats;display:flex;flex-direction:column;gap:20px}
+.stat .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+.stat .v{font-family:"Fraunces",serif;font-weight:900;font-size:44px;line-height:1;color:#f4efe3;font-variant-numeric:tabular-nums}
+.stat .v.gold{color:var(--gold-glow);text-shadow:0 0 26px rgba(232,185,64,.35)}
+.stat .v.teal{color:var(--teal-soft);text-shadow:0 0 26px rgba(47,169,164,.4)}
+.bar{height:3px;background:var(--line);margin-top:10px;position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0;right:auto;background:var(--teal-glow);box-shadow:0 0 12px rgba(47,169,164,.8);transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+.bar.g i{background:var(--gold);box-shadow:0 0 12px rgba(232,185,64,.7)}
+.pulse-row{margin-top:auto;border-top:1px solid var(--line);padding-top:16px}
+.pulse-row .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.ekg{width:100%;height:44px}
+
+/* ===== BRIEFING ===== */
+.brief{grid-area:brief;display:flex;flex-direction:column}
+.btext{font-size:15px;line-height:1.75;color:var(--text);white-space:pre-wrap;flex:1;overflow:hidden}
+.btext b{color:var(--gold-glow);font-weight:600}
+.cursor{display:inline-block;width:9px;height:18px;background:var(--teal-glow);vertical-align:-3px;animation:blink 1s steps(1) infinite;box-shadow:0 0 10px rgba(47,169,164,.8)}
+@keyframes blink{50%{opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+  .line{animation:none;opacity:1;transform:none}
+  .cursor{animation:none}
+}
+
+/* site footer bar: back link + CTA */
+.sitebar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:10px 18px;background:rgba(10,11,9,.96);border-top:2px solid #e8b940;font-family:"Spline Sans Mono",monospace;backdrop-filter:blur(6px)}
+.sitebar .sb-back{color:#6fd3ce;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.sitebar .sb-back:hover{text-decoration:underline}
+.sitebar .sb-cta{background:#e8b940;color:#141005;text-decoration:none;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:10px 20px;white-space:nowrap}
+.sitebar .sb-cta:hover{background:#f2c85a}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div class="brand">
+    <div class="claw">CLAW<span>.</span></div>
+    <div class="sub">Personal Ops Agent · Overnight Run</div>
+  </div>
+  <div class="chips">
+    <div class="chip on">Online</div>
+    <div class="chip on">Notion Sync</div>
+    <div class="chip on">Telegram</div>
+    <div class="chip">Idle: none</div>
+  </div>
+  <div class="clock">
+    <div class="t" id="clock">04:00:00</div>
+    <div class="d" id="date">While you slept</div>
+  </div>
+</div>
+
+<div class="panel log">
+  <div class="ptitle">Activity</div>
+  <div class="logfeed" id="feed"></div>
+</div>
+
+<div class="orb">
+  <canvas id="cv"></canvas>
+  <div class="orbstate" id="orbstate">Working</div>
+  <div class="orbtag">Use AI · Stay Human</div>
+</div>
+
+<div class="panel stats">
+  <div class="ptitle">Tonight</div>
+  <div class="stat">
+    <div class="k">Database updates</div>
+    <div class="v teal" id="c-db">0</div>
+    <div class="bar"><i id="b-db" style="width:0%"></i></div>
+  </div>
+  <div class="stat">
+    <div class="k">Tasks organized</div>
+    <div class="v" id="c-tasks">0</div>
+    <div class="bar"><i id="b-tasks" style="width:0%"></i></div>
+  </div>
+  <div class="stat">
+    <div class="k">Boomerangs queued</div>
+    <div class="v gold" id="c-boom">0</div>
+    <div class="bar g"><i id="b-boom" style="width:0%"></i></div>
+  </div>
+  <div class="pulse-row">
+    <div class="k">System pulse</div>
+    <canvas class="ekg" id="ekg"></canvas>
+  </div>
+</div>
+
+<div class="panel brief">
+  <div class="ptitle">Morning briefing · compiling for 07:00 send</div>
+  <div class="btext"><span id="btext"></span><span class="cursor"></span></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — PASTE YOUR REAL CLAW OUTPUT HERE
+   Keep the actions real (briefings, DB updates, boomerangs).
+   No invented revenue or performance numbers.
+   ------------------------------------------------------------
+   logLines: [minutes-past-4am, "message", style]
+     style: "" normal · "sys" dim · "hot" teal · "gold" gold
+   counters: end values the tickers climb to
+   briefing: the text that types itself out (b tags = gold)
+   ============================================================ */
+const CONFIG = {
+  startHour: 4,            // clock starts at 04:00
+  endHour: 7,              // loops back after 07:00
+  minutesPerSecond: 1.6,   // clock speed (higher = faster)
+
+  logLines: [
+    [2,  "session start · overnight run", "sys"],
+    [9,  "scanning Work DB", "sys"],
+    [14, "Work DB · 3 entries updated", "hot"],
+    [22, "priority resort · Gold queue rebuilt", ""],
+    [31, "Boomerang check · 2 tasks due back", "gold"],
+    [38, "Boomerang returned → Friday follow-up", "gold"],
+    [47, "Personal DB · 2 entries updated", "hot"],
+    [58, "calendar scan · tomorrow clear until 15:00", ""],
+    [66, "flag raised · 1 task waiting 3 days", "gold"],
+    [75, "Work DB · 4 entries updated", "hot"],
+    [84, "dedupe pass · 2 stale tasks archived", "sys"],
+    [95, "weekly pattern scan running", "sys"],
+    [104,"pipeline check · 8 published · 2 behind", ""],
+    [114,"drafting morning briefing", "hot"],
+    [126,"briefing · priorities ranked", ""],
+    [135,"briefing · flags attached", ""],
+    [148,"compiling final briefing", "hot"],
+    [166,"briefing queued for 07:00", "gold"],
+    [178,"briefing sent → Telegram", "gold"]
+  ],
+
+  counters: { db: 14, tasks: 23, boom: 2 },
+
+  briefing: "Morning. Here is your day.\n<b>1.</b> Funnel page copy — Gold, due today. Draft is in the Work DB.\n<b>2.</b> Landing page A/B results are in — review before noon.\n<b>3.</b> Newsletter issue publishes at 9 — Sam has it In Progress.\n<b>Flag:</b> clips batch is Waiting On editing, day 3. Consider moving the deadline.\nBoomerang returns Friday: affiliate follow-up. Everything else is handled."
+};
+
+/* ============================================================ */
+
+/* ---- clock ---- */
+const clockEl = document.getElementById('clock');
+let mins = 0;
+const span = (CONFIG.endHour - CONFIG.startHour) * 60;
+setInterval(() => {
+  mins += CONFIG.minutesPerSecond / 10;
+  if (mins > span + 8) { mins = 0; resetRun(); }
+  const h = Math.floor(CONFIG.startHour + mins / 60);
+  const m = Math.floor(mins % 60);
+  const s = Math.floor((mins * 60) % 60);
+  clockEl.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  tickLog(); tickCounters();
+}, 100);
+
+/* ---- log feed ---- */
+const feed = document.getElementById('feed');
+let logIdx = 0;
+function tickLog(){
+  while (logIdx < CONFIG.logLines.length && CONFIG.logLines[logIdx][0] <= mins){
+    const [t, msg, style] = CONFIG.logLines[logIdx];
+    const h = Math.floor(CONFIG.startHour + t/60), m = Math.floor(t%60);
+    const el = document.createElement('div');
+    el.className = 'line ' + (style||'');
+    el.innerHTML = '<span class="ts">' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + '</span><span class="msg">' + msg + '</span>';
+    feed.appendChild(el);
+    while (feed.children.length > 14) feed.removeChild(feed.firstChild);
+    flash(style === 'gold' ? 1 : 0.6);
+    logIdx++;
+  }
+}
+
+/* ---- counters ---- */
+const targets = CONFIG.counters;
+const cur = { db:0, tasks:0, boom:0 };
+function tickCounters(){
+  const p = Math.min(mins / (span * 0.92), 1);
+  for (const k of ['db','tasks','boom']){
+    const want = Math.round(targets[k] * easeOut(p));
+    if (want !== cur[k]){
+      cur[k] = want;
+      document.getElementById('c-'+k).textContent = want;
+      document.getElementById('b-'+k).style.width = (want / targets[k] * 100) + '%';
+    }
+  }
+}
+function easeOut(x){ return 1 - Math.pow(1-x, 2.2); }
+
+/* ---- briefing typewriter ---- */
+const btextEl = document.getElementById('btext');
+let bIdx = 0, bTimer = null;
+function typeBriefing(){
+  clearInterval(bTimer);
+  bIdx = 0; btextEl.innerHTML = '';
+  const src = CONFIG.briefing;
+  bTimer = setInterval(() => {
+    if (bIdx >= src.length){ clearInterval(bTimer); return; }
+    // consume whole tags at once so <b> never renders half-typed
+    if (src[bIdx] === '<'){
+      const close = src.indexOf('>', bIdx);
+      bIdx = close + 1;
+    } else bIdx++;
+    btextEl.innerHTML = src.slice(0, bIdx);
+  }, 34);
+}
+setTimeout(typeBriefing, 2500);
+
+function resetRun(){
+  logIdx = 0; feed.innerHTML = '';
+  cur.db = cur.tasks = cur.boom = -1;
+  typeBriefing();
+}
+
+/* ---- orb ---- */
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+let W, H, R;
+function size(){ 
+  W = cv.width = cv.offsetWidth * devicePixelRatio; 
+  H = cv.height = cv.offsetHeight * devicePixelRatio;
+  R = Math.min(W,H) * 0.30;
+}
+size(); addEventListener('resize', size);
+
+const N = 340, pts = [];
+for (let i=0;i<N;i++){
+  const th = Math.acos(2*Math.random()-1), ph = Math.random()*Math.PI*2;
+  pts.push({th, ph, r: 0.55 + Math.random()*0.45, sp: 0.7+Math.random()*0.6, gold: Math.random()<0.14});
+}
+let rot = 0, glow = 0;
+function flash(v){ glow = Math.max(glow, v); }
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const cx = W/2, cy = H/2;
+  const breath = 1 + Math.sin(Date.now()/1400)*0.02 + glow*0.05;
+  glow *= 0.96;
+  rot += 0.0016;
+
+  // halo
+  const halo = ctx.createRadialGradient(cx,cy,R*0.2,cx,cy,R*1.9);
+  halo.addColorStop(0, 'rgba(47,169,164,'+(0.10+glow*0.12)+')');
+  halo.addColorStop(1, 'rgba(47,169,164,0)');
+  ctx.fillStyle = halo; ctx.fillRect(0,0,W,H);
+
+  // rings
+  ctx.strokeStyle = 'rgba(47,169,164,0.35)'; ctx.lineWidth = 1.2*devicePixelRatio;
+  ctx.beginPath(); ctx.arc(cx,cy,R*1.28*breath,0,7); ctx.stroke();
+  ctx.strokeStyle = 'rgba(189,139,19,0.5)'; ctx.setLineDash([2*devicePixelRatio,7*devicePixelRatio]);
+  ctx.beginPath(); ctx.arc(cx,cy,R*1.42*breath, rot*2, rot*2+Math.PI*1.75); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // particles
+  for (const p of pts){
+    const ph = p.ph + rot*p.sp;
+    const x3 = Math.sin(p.th)*Math.cos(ph), y3 = Math.cos(p.th), z3 = Math.sin(p.th)*Math.sin(ph);
+    const depth = (z3+1)/2;
+    const x = cx + x3*R*p.r*breath, y = cy + y3*R*p.r*breath;
+    const s = (0.6 + depth*1.9) * devicePixelRatio * (1+glow*0.4);
+    if (p.gold){
+      ctx.fillStyle = 'rgba(232,185,64,' + (0.25+depth*0.65) + ')';
+    } else {
+      ctx.fillStyle = 'rgba(111,211,206,' + (0.12+depth*0.6+glow*0.2) + ')';
+    }
+    ctx.beginPath(); ctx.arc(x,y,s,0,7); ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ---- ekg pulse ---- */
+const ekg = document.getElementById('ekg'), ectx = ekg.getContext('2d');
+function esize(){ ekg.width = ekg.offsetWidth*devicePixelRatio; ekg.height = ekg.offsetHeight*devicePixelRatio; }
+esize(); addEventListener('resize', esize);
+let ex = 0;
+setInterval(()=>{
+  const w = ekg.width, h = ekg.height;
+  ectx.fillStyle = 'rgba(16,18,15,0.12)'; ectx.fillRect(0,0,w,h);
+  const y = h/2 + Math.sin(ex/6)*h*0.12 + (Math.random()<0.06 ? (Math.random()-0.5)*h*0.7 : 0);
+  ectx.fillStyle = '#2fa9a4'; ectx.shadowColor='#2fa9a4'; ectx.shadowBlur=8;
+  ectx.fillRect((ex*3*devicePixelRatio)%w, y, 2*devicePixelRatio, 2*devicePixelRatio);
+  ectx.shadowBlur=0; ex++;
+}, 30);
+
+/* ---- orb state label cycles ---- */
+const states = ['Working','Syncing Notion','Sorting priorities','Compiling briefing','Standing by'];
+let sIdx = 0;
+setInterval(()=>{ sIdx=(sIdx+1)%states.length; document.getElementById('orbstate').textContent = states[sIdx]; }, 9000);
+</script>
+
+<div class="sitebar">
+  <a class="sb-back" href="./">‹ The AI OS Agent — back to the main page</a>
+  <a class="sb-cta" href="https://shop.beacons.ai/colinstuckert/95c07a78-fae0-4be4-a731-70a566bb2e21?pageViewSource=lib_view&referrer=https%3A%2F%2Fbeacons.ai%2Fcolinstuckert&show_back_button=true">Get the Agent System →</a>
+</div>
+</body>
+</html>

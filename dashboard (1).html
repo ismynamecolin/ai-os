@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The AI OS Agent · by Colin Stuckert</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CLAW DAY BOARD — operator daily view (film prop + usable)
+   Views: TODAY / TOMORROW (toggle top center, or press T).
+   All content lives in CONFIG at the top of the <script>.
+   ============================================================ */
+:root{
+  --ink:#0b0c0a; --panel:#10120f; --panel2:#141712; --line:#1e241f;
+  --teal:#0f3d3e; --teal-glow:#2fa9a4; --teal-soft:#6fd3ce;
+  --gold:#bd8b13; --gold-glow:#e8b940;
+  --red:#e0524f; --red-glow:#ff6b67;
+  --text:#c9d4cf; --dim:#5c6a62; --cream:#f4efe3;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--ink);overflow:hidden}
+body{font-family:"Spline Sans Mono",monospace;color:var(--text)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(47,169,164,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(47,169,164,.04) 1px,transparent 1px);
+  background-size:56px 56px;}
+
+.app{height:calc(100vh - 50px);display:grid;grid-template-rows:64px 78px 1fr;gap:1px}
+
+/* ===== HEADER ===== */
+.head{background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.brand{display:flex;align-items:center;gap:16px}
+.brand .claw{font-family:"Fraunces",serif;font-weight:900;font-size:22px;color:var(--cream)}
+.brand .claw span{color:var(--gold-glow)}
+.brand .sub{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#e6e2d6;font-weight:600;border-left:1px solid var(--line);padding-left:16px}
+.toggle{display:flex;border:1px solid var(--line)}
+.tbtn{font-family:inherit;font-size:11px;letter-spacing:.24em;text-transform:uppercase;padding:10px 26px;background:transparent;color:var(--dim);border:none;cursor:pointer}
+.tbtn.on{background:var(--teal);color:var(--teal-soft);text-shadow:0 0 12px rgba(47,169,164,.7)}
+.clock{text-align:right}
+.clock .t{font-size:26px;font-weight:600;color:var(--cream);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.clock .d{font-size:10px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+
+/* ===== QUOTE BAR (under header) ===== */
+.qbar{background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:16px;padding:0 40px;overflow:hidden}
+.qbar .qmark{font-family:"Fraunces",serif;font-weight:900;font-size:46px;color:var(--gold);opacity:.55;flex-shrink:0;line-height:1}
+.quote{opacity:0;transition:opacity 1.1s ease;display:flex;align-items:baseline;gap:16px;justify-content:center;flex-wrap:wrap}
+.quote.show{opacity:1}
+.quote .qt{font-family:"Fraunces",serif;font-style:italic;font-weight:600;font-size:34px;color:var(--cream)}
+.quote .qa{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-glow);white-space:nowrap}
+
+/* ===== LAYOUT ===== */
+.view{display:none;height:100%;min-height:0}
+.view.on{display:grid}
+#vToday{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 210px;gap:1px;
+  grid-template-areas:"one stream side" "one meet side"}
+#vTomorrow{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;
+  grid-template-areas:"night plan side" "night plan side"}
+
+.panel{background:var(--panel);border:1px solid var(--line);padding:24px 26px;position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.ptitle{font-size:28px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#d5dfd8;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.ptitle::before{content:"";width:13px;height:13px;background:var(--gold);flex-shrink:0}
+.ptitle::after{content:"";flex:1;height:1px;background:var(--line)}
+.ptitle .flag{color:var(--gold-glow);letter-spacing:.14em}
+
+/* ===== LEFT: LIVE METRICS ===== */
+.one{grid-area:one;gap:0}
+
+/* sidebar headings a step smaller than main columns so all four blocks fit */
+.side .ptitle{font-size:19px;margin-bottom:6px}
+.side .ptitle::before{width:11px;height:11px}
+
+/* ===== SIDEBAR: ONE THING + SIGNAL VS NOISE ===== */
+.sblock.onething .kick{font-size:19px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#d5dfd8;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.sblock.onething .kick::before{content:"";width:11px;height:11px;background:var(--gold);flex-shrink:0}
+.sblock.onething h1{font-family:"Spline Sans Mono",monospace;font-weight:600;font-size:20px;line-height:1.3;color:var(--cream)}
+.sblock.onething .why{margin-top:6px;font-size:12px;color:var(--dim);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sblock.onething .svn{margin-top:8px;border-top:1px solid var(--line);padding-top:6px}
+.sblock.onething .trow{padding:3px 0}
+.sblock.onething .trow .txt{font-size:15px}
+.sblock.onething .trow .n{font-size:18px;width:22px}
+.trow{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.trow:last-child{border-bottom:none}
+.trow .n{font-family:"Fraunces",serif;font-weight:900;font-size:22px;color:var(--gold);width:26px;flex-shrink:0}
+.trow .txt{font-size:14px;color:var(--text)}
+.trow .meta{margin-left:auto;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);flex-shrink:0}
+.trow.done .txt{color:var(--dim);text-decoration:line-through}
+.trow.done .n{color:var(--dim)}
+
+/* ===== ACTIVITY STREAM (center) ===== */
+.stream{grid-area:stream;align-items:center}
+.stream .ptitle{width:100%;justify-content:center}
+.stream .sfeed{width:100%;max-width:92%}
+.sfeed{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 6%);mask-image:linear-gradient(to bottom,transparent,black 6%)}
+.sline{font-size:20px;line-height:1.5;display:flex;align-items:baseline;gap:11px;opacity:0;transform:translateY(8px);animation:in .3s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.sline .ts{color:var(--dim);flex-shrink:0;font-size:11px}
+.sline .src{flex-shrink:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;padding:2px 7px;border:1px solid}
+.src.claw{color:var(--gold-glow);border-color:rgba(189,139,19,.55)}
+.src.notion{color:var(--teal-soft);border-color:rgba(47,169,164,.55)}
+.src.team{color:#b8a6e8;border-color:rgba(150,120,220,.5)}
+.src.email{color:#e8a0c0;border-color:rgba(220,120,170,.45)}
+.sline .msg{color:var(--text)}
+.scount{font-variant-numeric:tabular-nums;color:var(--teal-soft)}
+
+/* ===== MEETINGS ===== */
+.meet{grid-area:meet}
+.meet .big{font-family:"Fraunces",serif;font-weight:900;font-size:42px;color:var(--cream);line-height:1}
+.meet .big small{font-size:13px;font-family:"Spline Sans Mono",monospace;font-weight:400;color:var(--dim);letter-spacing:.14em;text-transform:uppercase;margin-left:10px}
+.mrow{display:flex;gap:14px;align-items:baseline;margin-top:14px;font-size:14px}
+.mrow .at{color:var(--gold-glow);font-weight:600;flex-shrink:0}
+.mrow .who{color:var(--text)}
+.mrow.none{color:var(--dim);font-size:13px}
+
+/* ===== SIDEBAR ===== */
+.side{grid-area:side;background:var(--panel2);gap:0;padding:0;display:flex;flex-direction:column}
+.sblock{padding:8px 22px;border-bottom:1px solid var(--line)}
+.sblock:last-child{border-bottom:none}
+.side .sblock{flex-shrink:0}
+.side .sblock.lifewrap{flex-shrink:1}
+/* compact deep work in sidebar */
+.dw{text-align:center;position:relative}
+.dw .timer{font-variant-numeric:tabular-nums;font-weight:600;font-size:28px;color:var(--teal-soft);letter-spacing:.04em;line-height:1;text-shadow:0 0 24px rgba(47,169,164,.45)}
+.dw.paused .timer{color:var(--cream);text-shadow:none}
+.dw .lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:4px 0 7px}
+.dbtn{font-family:inherit;font-size:10px;letter-spacing:.22em;text-transform:uppercase;font-weight:600;
+  padding:7px 24px;background:transparent;color:var(--teal-soft);border:1px solid var(--teal-glow);cursor:pointer}
+.dw.paused .dbtn{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.qrow{display:flex;align-items:center;gap:10px;padding:1px 0;cursor:pointer;font-size:11.5px}
+.qrow .box{width:15px;height:15px;border:1px solid var(--dim);flex-shrink:0;position:relative}
+.qrow.done .box{border-color:var(--teal-glow);background:var(--teal)}
+.qrow.done .box::after{content:"✓";position:absolute;inset:0;color:var(--teal-soft);font-size:11px;display:flex;align-items:center;justify-content:center}
+.qrow.done .qt{color:var(--dim);text-decoration:line-through}
+.dbrow{display:flex;align-items:center;gap:10px;padding:2px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.dbrow:last-child{border-bottom:none}
+.dbrow .nm{color:var(--text)}
+.dbrow .st{margin-left:auto;font-size:10px;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;padding:3px 8px;border:1px solid var(--line)}
+.dbrow .st.due{color:var(--gold-glow);border-color:rgba(189,139,19,.5);text-shadow:0 0 10px rgba(232,185,64,.4)}
+.dbrow .st.ok{color:var(--dim)}
+
+/* ===== LIFE CLOCK (memento mori) ===== */
+.lifewrap{text-align:center;flex:1;min-height:0;display:flex;flex-direction:column}
+.lifewrap .liferows{flex:1;display:flex;flex-direction:column;justify-content:space-evenly}
+.liferow{display:flex;flex-direction:column;align-items:center;padding:0}
+.liferow .lk{font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c4d0c8;line-height:1;margin-bottom:2px}
+.liferow .lv{font-family:"Fraunces",serif;font-weight:900;font-size:27px;color:var(--cream);font-variant-numeric:tabular-nums;line-height:1}
+.liferow.sec .lv{color:var(--gold-glow);text-shadow:0 0 16px rgba(232,185,64,.35);font-size:30px}
+
+/* ===== TOMORROW ===== */
+.night{grid-area:night}
+.nline{font-size:13px;line-height:1.5;display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.nline:last-child{border-bottom:none}
+.nline .ts{color:var(--gold);flex-shrink:0;font-weight:500}
+.nline.hot .msg{color:var(--teal-soft)}
+.nline.gold .msg{color:var(--gold-glow)}
+.plan{grid-area:plan}
+.plan .sec{margin-bottom:22px}
+.plan .sk{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-glow);margin-bottom:10px}
+.plan .prow{display:flex;gap:12px;font-size:14px;padding:7px 0}
+.plan .prow .n{color:var(--gold);font-weight:600}
+.plan .first{font-family:"Fraunces",serif;font-weight:600;font-size:20px;color:var(--cream);line-height:1.3}
+
+/* ===== LIVE STATS GRID (2 x 4, upper left) ===== */
+.tape{flex:1;min-height:0;display:grid;grid-template-columns:1fr;grid-auto-rows:1fr;border:1px solid var(--line)}
+.tstat{display:flex;flex-direction:column;justify-content:center;padding:10px 20px 22px;border-bottom:1px solid var(--line);position:relative;overflow:hidden;background:var(--panel2)}
+.tstat:last-child{border-bottom:none}
+.tstat .k{font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#a3b0a7;margin-bottom:6px;white-space:nowrap;position:relative;z-index:2}
+.tstat .v{font-family:"Fraunces",serif;font-weight:900;font-size:30px;line-height:1;color:var(--cream);font-variant-numeric:tabular-nums;white-space:nowrap;position:relative;z-index:2}
+.tstat.teal .v{color:var(--teal-soft);text-shadow:0 0 18px rgba(47,169,164,.35)}
+.tstat.gold .v{color:var(--gold-glow);text-shadow:0 0 18px rgba(232,185,64,.3)}
+.tstat.alert .v{color:var(--gold-glow)}
+/* live status states — applied by the logic engine */
+.tstat .v.warn{color:var(--gold-glow)!important;text-shadow:0 0 20px rgba(232,185,64,.5)!important}
+.tstat .v.crit{color:var(--red-glow)!important;text-shadow:0 0 24px rgba(255,107,103,.65)!important;animation:crit 1.3s ease-in-out infinite}
+@keyframes crit{50%{opacity:.55}}
+.flash-teal{animation:fteal .5s}
+@keyframes fteal{30%{color:var(--teal-soft);text-shadow:0 0 22px rgba(47,169,164,.7)}}
+.tstat .live{position:absolute;top:12px;right:14px;width:5px;height:5px;border-radius:50%;background:var(--red);
+  box-shadow:0 0 8px rgba(224,82,79,.9);animation:lv 2.2s ease-in-out infinite;z-index:3}
+@keyframes lv{50%{opacity:.25}}
+.spark{position:absolute;left:0;right:0;bottom:0;width:100%;height:26px;opacity:.95;z-index:1}
+.bump{animation:bump .3s}
+@keyframes bump{30%{transform:translateY(-2px);color:var(--cream)}}
+
+/* ===== TOASTS ===== */
+.toasts{position:fixed;top:126px;right:20px;z-index:50;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--gold);
+  padding:13px 18px;min-width:290px;max-width:360px;
+  box-shadow:0 8px 30px rgba(0,0,0,.55), 0 0 20px rgba(232,185,64,.06);
+  transform:translateX(120%);transition:transform .45s cubic-bezier(.2,.8,.2,1), opacity .5s;opacity:1}
+.toast.in{transform:translateX(0)}
+.toast.out{opacity:0}
+.toast .th{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.toast .th .dot{width:6px;height:6px;border-radius:50%;background:var(--gold-glow);box-shadow:0 0 8px rgba(232,185,64,.8)}
+.toast .th .who{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-glow)}
+.toast .th .tt{margin-left:auto;font-size:9.5px;color:var(--dim)}
+.toast .tm{font-size:13px;color:var(--text);line-height:1.45}
+
+@media (prefers-reduced-motion:reduce){
+  .sline{animation:none;opacity:1;transform:none}
+  .toast{transition:none}
+}
+
+/* site footer bar: back link + CTA */
+.sitebar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:10px 18px;background:rgba(10,11,9,.96);border-top:2px solid #e8b940;font-family:"Spline Sans Mono",monospace;backdrop-filter:blur(6px)}
+.sitebar .sb-back{color:#6fd3ce;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.sitebar .sb-back:hover{text-decoration:underline}
+.sitebar .sb-cta{background:#e8b940;color:#141005;text-decoration:none;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:10px 20px;white-space:nowrap}
+.sitebar .sb-cta:hover{background:#f2c85a}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="head">
+    <div class="brand">
+      <div class="claw">The AI OS Agent</div>
+      <div class="sub">by Colin Stuckert</div>
+    </div>
+    <div class="toggle">
+      <button class="tbtn on" id="btnToday" onclick="setView('Today')">Today</button>
+      <button class="tbtn" id="btnTomorrow" onclick="setView('Tomorrow')">Tomorrow</button>
+    </div>
+    <div class="clock">
+      <div class="t" id="clock">–:–</div>
+      <div class="d" id="date"></div>
+    </div>
+  </div>
+
+  <!-- quote cycler, under header -->
+  <div class="qbar">
+    <span class="qmark">“</span>
+    <div class="quote show" id="quote">
+      <span class="qt" id="qtext"></span>
+      <span class="qa" id="qauthor"></span>
+    </div>
+  </div>
+
+  <!-- ================= TODAY ================= -->
+  <div class="view on" id="vToday">
+    <div class="panel one">
+      <div class="ptitle">Live Metrics</div>
+  <div class="tape">
+    <div class="tstat teal"><span class="live"></span>
+      <div class="k">Team tokens · today</div>
+      <div class="v" id="tk-tokens">0</div>
+      <canvas class="spark" data-pace="fast"></canvas>
+    </div>
+    <div class="tstat"><span class="live"></span>
+      <div class="k">Token cost · today</div>
+      <div class="v" id="tk-cost">$0.00</div>
+      <canvas class="spark" data-pace="fast"></canvas>
+    </div>
+    <div class="tstat teal"><span class="live"></span>
+      <div class="k">Notion updates · today</div>
+      <div class="v" id="tk-updates">0</div>
+      <canvas class="spark" data-pace="med"></canvas>
+    </div>
+    <div class="tstat alert">
+      <div class="k">Notion overdue</div>
+      <div class="v" id="tk-overdue">0</div>
+      <canvas class="spark" data-pace="slow"></canvas>
+    </div>
+    <div class="tstat">
+      <div class="k">Team tasks · lifetime</div>
+      <div class="v" id="tk-life">0</div>
+      <canvas class="spark" data-pace="med"></canvas>
+    </div>
+    <div class="tstat">
+      <div class="k">Team tasks · this week</div>
+      <div class="v" id="tk-week">0</div>
+      <canvas class="spark" data-pace="med"></canvas>
+    </div>
+    <div class="tstat gold"><span class="live"></span>
+      <div class="k">Sales · today</div>
+      <div class="v" id="tk-sales">$0.00</div>
+      <canvas class="spark" data-pace="fast"></canvas>
+    </div>
+    <div class="tstat gold"><span class="live"></span>
+      <div class="k">Ad spend · today</div>
+      <div class="v" id="tk-spend">$0.00</div>
+      <canvas class="spark" data-pace="fast"></canvas>
+    </div>
+  </div>
+    </div>
+
+    <div class="panel stream">
+      <div class="ptitle">Activity Log · <span class="scount" id="scount">0</span>&nbsp;events today</div>
+      <div class="sfeed" id="sfeed"></div>
+    </div>
+
+    <div class="panel meet">
+      <div class="ptitle">Meetings today</div>
+      <div class="big"><span id="meetCount">0</span><small id="meetWord">meetings</small></div>
+      <div id="meetList"></div>
+    </div>
+
+    <div class="panel side">
+      <div class="sblock onething">
+        <div class="kick">Your one thing</div>
+        <h1 id="oneThing"></h1>
+        <div class="why" id="oneWhy"></div>
+        <div class="svn">
+          <div class="ptitle">Signal vs noise <span class="flag" id="top3flag"></span></div>
+          <div id="top3"></div>
+        </div>
+      </div>
+      <div class="sblock dw" id="dwPanel">
+        <div class="ptitle">Deep work</div>
+        <div class="timer" id="timer">00:00</div>
+        <div class="lbl" id="deepLbl">Focus block · running</div>
+        <button class="dbtn" id="deepBtn" onclick="toggleDeep()">Pause</button>
+      </div>
+      <div class="sblock">
+        <div class="ptitle">Quick tasks</div>
+        <div id="quick" style="display:grid;grid-template-columns:1fr 1fr;column-gap:14px"></div>
+      </div>
+      <div class="sblock">
+        <div class="ptitle">Agent databases</div>
+        <div id="dbs" style="display:grid;grid-template-columns:1fr 1fr;column-gap:14px"></div>
+      </div>
+      <div class="sblock lifewrap">
+        <div class="ptitle" style="justify-content:center">Life clock</div>
+        <div class="liferows">
+        <div class="liferow"><span class="lk">Years left</span><span class="lv" id="lc-y">–</span></div>
+        <div class="liferow"><span class="lk">Months left</span><span class="lv" id="lc-m">–</span></div>
+        <div class="liferow"><span class="lk">Days left</span><span class="lv" id="lc-d">–</span></div>
+        <div class="liferow sec"><span class="lk">Seconds left</span><span class="lv" id="lc-s">–</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOMORROW ================= -->
+  <div class="view" id="vTomorrow">
+    <div class="panel night">
+      <div class="ptitle">Overnight · what your agent handled</div>
+      <div id="night"></div>
+    </div>
+    <div class="panel plan">
+      <div class="ptitle">The plan · tomorrow</div>
+      <div class="sec">
+        <div class="sk">First block</div>
+        <div class="first" id="tmFirst"></div>
+      </div>
+      <div class="sec">
+        <div class="sk">Top 3 tomorrow</div>
+        <div id="tmTop3"></div>
+      </div>
+      <div class="sec">
+        <div class="sk">Meetings</div>
+        <div id="tmMeet"></div>
+      </div>
+    </div>
+    <div class="panel side">
+      <div class="sblock">
+        <div class="ptitle">Boomerangs returning</div>
+        <div id="tmBoom"></div>
+      </div>
+      <div class="sblock">
+        <div class="ptitle">Agent databases</div>
+        <div id="dbs2"></div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================================================
+   CONFIG — EDIT EVERYTHING HERE
+   Keep actions real. Generic content, no invented numbers.
+   ============================================================ */
+const CONFIG = {
+  oneThing: "Ship the funnel page copy.",
+  oneWhy: "Everything else this week keys off this. Two hours, door closed, done before lunch.",
+
+  top3: [
+    { t: "Draft funnel page copy",          meta: "Gold" },
+    { t: "Review landing page A/B results", meta: "Gold" },
+    { t: "Record 3 short-form videos",      meta: "Gold" }
+  ],
+
+  meetings: [
+    { at: "3:00 PM", who: "Call · 30 min" }
+  ],
+
+  quickTasks: [
+    "Approve thumbnail options",
+    "Reply to partner email",
+    "Post today's short",
+    "Clear Telegram flags",
+    "Update content calendar"
+  ],
+
+  databases: [
+    { icon: "🦞", name: "Work Tasks",          attention: 3 },
+    { icon: "🦞", name: "Personal DB",         attention: 1 },
+    { icon: "🦞", name: "CRM",                 attention: 2 },
+    { icon: "🦞", name: "Financial Dashboard", attention: 0 },
+    { icon: "🦞", name: "Personal Index",      attention: 0 },
+    { icon: "🦞", name: "MY Tracker",          attention: 1 }
+  ],
+
+  deepWorkMinutes: 90,
+  deepWorkAutostart: true,
+
+  /* ---- ACTIVITY STREAM (center panel) ----
+     Pool of events; one fires every streamMinGap–streamMaxGap seconds.
+     src: claw | notion | team | email */
+  streamMinGap: 1.2, streamMaxGap: 3.5,
+  streamEvents: [
+    ["claw",   "Work DB scanned · priorities resorted"],
+    ["notion", "Work Tasks · entry updated"],
+    ["claw",   "Boomerang check · 1 due back Friday"],
+    ["team",   "Jordan moved clips batch → In Progress"],
+    ["email",  "Inbox triaged · 2 flagged for reply"],
+    ["notion", "Personal DB · entry updated"],
+    ["claw",   "Calendar scan · afternoon clear"],
+    ["team",   "Sam marked newsletter → Ready"],
+    ["notion", "CRM · contact touched"],
+    ["email",  "Follow-up drafted · awaiting your send"],
+    ["claw",   "Stale task archived"],
+    ["team",   "Riley queued 4 reposts"],
+    ["notion", "MY Tracker · status flipped"],
+    ["claw",   "Flag raised · task waiting 3 days"],
+    ["email",  "Newsletter reply sorted → folder"],
+    ["notion", "Work Tasks · new entry added"]
+  ],
+  streamCountStart: 87,   // events already logged today when page opens
+
+  /* ---- TOASTS (top-right, every 20–40s) ---- */
+  toasts: [
+    "Work DB updated · 2 entries",
+    "Boomerang returned → Friday follow-up",
+    "Morning briefing sent → Telegram",
+    "Priority resort complete · Gold queue rebuilt",
+    "1 task waiting on editing · day 3 · flagged",
+    "Calendar clear until 3:00 PM",
+    "Personal DB updated · 1 entry",
+    "2 stale tasks archived"
+  ],
+  toastMinGap: 20, toastMaxGap: 40,
+
+  /* ---- LIVE TICKER ----
+     Daily-rate stats anchor to the real clock: value = rate x fraction
+     of day elapsed. Set these to YOUR REAL NUMBERS before filming.
+     demoSpeed: 1 = real time. 60+ makes slow counters move on camera. */
+  ticker: {
+    demoSpeed: 1,
+    tokensPerDay: 4200000,
+    tokenCostPerDay: 22,      // slower climb than tokens
+    notionUpdatesPerDay: 140,
+    notionOverdue: 4,
+    tasksLifetime: 10554,
+    tasksThisWeek: 220,
+    tasksTickEverySecs: 45,   // team task counters +1 on this schedule
+    adSpendPerDay: 300,
+    salesStartAt: 1200,       // sales counter opens at this figure
+    salesPerDay: 2000,        // climbs at this daily revenue pace
+
+    /* live-state logic */
+    overdueStart: 4,
+    overdueMax: 6,            // cycle peaks here (red at this point)
+    overdueAlertAt: 6,        // turns red at this count
+    overdueFloor: 3,          // Claw clears down to here
+    overdueTickSecs: 24,      // how often overdue moves ±1
+    updateTickSecs: 2,        // Notion updates +1 on this schedule
+    budgetWarnAt: 0.85,       // tokens/cost/spend: gold at 85% of daily
+    budgetCritAt: 1.0         //   red past 100%
+  },
+
+  /* ---- LIFE CLOCK (memento mori) ---- */
+  lifeExpectancy: 75,
+  currentAge: 41,
+
+  /* ---- QUOTES (top bar, rotates every 9s) ---- */
+  quotes: [
+    ["Real artists ship.", "Steve Jobs"],
+    ["Be water, my friend.", "Bruce Lee"],
+    ["Focusing is about saying no.", "Steve Jobs"],
+    ["The successful warrior is the average man, with laser-like focus.", "Bruce Lee"],
+    ["Well done is better than well said.", "Benjamin Franklin"],
+    ["It always seems impossible until it's done.", "Nelson Mandela"],
+    ["The best way to predict the future is to invent it.", "Alan Kay"],
+    ["Whether you think you can or you think you can't, you're right.", "Henry Ford"],
+    ["Hard choices, easy life. Easy choices, hard life.", "Jerzy Gregorek"],
+    ["Slow is smooth. Smooth is fast.", "Navy saying"]
+  ],
+
+  /* ---- TOMORROW view ---- */
+  overnight: [
+    ["04:14", "Work DB · 3 entries updated", "hot"],
+    ["04:31", "Boomerang check · 2 due back", "gold"],
+    ["04:47", "Personal DB · 2 entries updated", "hot"],
+    ["05:06", "calendar scan · clear until 15:00", ""],
+    ["05:24", "flag raised · 1 task waiting 3 days", "gold"],
+    ["05:52", "stale tasks archived · 2", ""],
+    ["06:48", "briefing compiled", "hot"],
+    ["07:00", "briefing sent → Telegram", "gold"]
+  ],
+  tomorrowFirst: "Deep work, 8–10am. Funnel copy, final pass.",
+  tomorrowTop3: [
+    "Finalize funnel page copy",
+    "Batch record 3 shorts",
+    "Send partner proposal"
+  ],
+  tomorrowMeetings: [
+    { at: "1:00 PM", who: "Team sync · 20 min" }
+  ],
+  boomerangs: [
+    { day: "Fri", t: "Affiliate follow-up" },
+    { day: "Mon", t: "Welcome email refresh" }
+  ]
+};
+/* ============================================================ */
+
+/* clock */
+function tickClock(){
+  const n = new Date();
+  document.getElementById('clock').textContent = n.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('date').textContent = n.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'});
+}
+tickClock(); setInterval(tickClock, 5000);
+
+/* view toggle */
+function setView(v){
+  for (const name of ['Today','Tomorrow']){
+    document.getElementById('v'+name).classList.toggle('on', name===v);
+    document.getElementById('btn'+name).classList.toggle('on', name===v);
+  }
+}
+addEventListener('keydown', e => { if (e.key.toLowerCase()==='t')
+  setView(document.getElementById('vToday').classList.contains('on') ? 'Tomorrow' : 'Today'); });
+
+/* one thing */
+document.getElementById('oneThing').textContent = CONFIG.oneThing;
+document.getElementById('oneWhy').textContent = CONFIG.oneWhy;
+
+/* top 3 */
+const t3 = document.getElementById('top3');
+CONFIG.top3.forEach((x,i)=>{
+  const el = document.createElement('div');
+  el.className='trow';
+  el.innerHTML = '<span class="n">'+(i+1)+'</span><span class="txt">'+x.t+'</span><span class="meta">'+(x.meta||'')+'</span>';
+  el.onclick = ()=>{ el.classList.toggle('done'); flagTop3(); };
+  t3.appendChild(el);
+});
+function flagTop3(){
+  const done = t3.querySelectorAll('.done').length;
+  document.getElementById('top3flag').textContent = done===3 ? '· all three. done by design' : (done ? '· '+done+' of 3 down' : '');
+}
+
+/* meetings */
+const ml = document.getElementById('meetList');
+document.getElementById('meetCount').textContent = CONFIG.meetings.length;
+document.getElementById('meetWord').textContent = CONFIG.meetings.length===1 ? 'meeting' : 'meetings';
+if (CONFIG.meetings.length===0){
+  ml.innerHTML = '<div class="mrow none">Clear day. Protect it.</div>';
+} else CONFIG.meetings.forEach(m=>{
+  ml.insertAdjacentHTML('beforeend','<div class="mrow"><span class="at">'+m.at+'</span><span class="who">'+m.who+'</span></div>');
+});
+
+/* quick tasks */
+const q = document.getElementById('quick');
+CONFIG.quickTasks.forEach(t=>{
+  const el = document.createElement('div');
+  el.className='qrow';
+  el.innerHTML='<span class="box"></span><span class="qt">'+t+'</span>';
+  el.onclick=()=>el.classList.toggle('done');
+  q.appendChild(el);
+});
+
+/* db tiles (both views) */
+function dbHTML(d){
+  const due = d.attention > 0;
+  return '<div class="dbrow"><span class="ico">'+d.icon+'</span><span class="nm">'+d.name+'</span>'+
+    '<span class="st '+(due?'due':'ok')+'">'+(due ? d.attention+' today' : 'None due')+'</span></div>';
+}
+document.getElementById('dbs').innerHTML  = CONFIG.databases.map(dbHTML).join('');
+document.getElementById('dbs2').innerHTML = CONFIG.databases.map(dbHTML).join('');
+
+/* deep work timer — running by default */
+let deepSecs = CONFIG.deepWorkMinutes*60, running=false, deepInt=null;
+const timerEl = document.getElementById('timer'), dwPanel=document.getElementById('dwPanel');
+function fmt(s){ const m=Math.floor(s/60), ss=s%60; return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0'); }
+timerEl.textContent = fmt(deepSecs);
+function toggleDeep(){
+  running = !running;
+  dwPanel.classList.toggle('paused', !running);
+  document.getElementById('deepBtn').textContent = running ? 'Pause' : 'Start';
+  document.getElementById('deepLbl').textContent = running ? 'Focus block · running' : 'Focus block · paused';
+  clearInterval(deepInt);
+  if (running) deepInt = setInterval(()=>{
+    deepSecs--;
+    if (deepSecs<=0){ deepSecs=0; toggleDeep(); document.getElementById('deepLbl').textContent='Block complete.'; }
+    timerEl.textContent = fmt(deepSecs);
+  },1000);
+}
+if (CONFIG.deepWorkAutostart) toggleDeep(); else dwPanel.classList.add('paused');
+
+/* ===== activity stream ===== */
+const sfeed = document.getElementById('sfeed');
+let sCount = CONFIG.streamCountStart, sPool = [];
+function nextStreamEvent(){
+  if (!sPool.length) sPool = [...CONFIG.streamEvents].sort(()=>Math.random()-0.5);
+  const [src,msg] = sPool.pop();
+  const n = new Date();
+  const el = document.createElement('div');
+  el.className = 'sline';
+  el.innerHTML = '<span class="ts">'+n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span>'+
+    '<span class="src '+src+'">'+(src==='claw'?'agent':src)+'</span><span class="msg">'+msg+'</span>';
+  sfeed.appendChild(el);
+  while (sfeed.children.length > 26) sfeed.removeChild(sfeed.firstChild);
+  sCount++;
+  document.getElementById('scount').textContent = sCount;
+  if (typeof orbFlash === 'function') orbFlash(0.7);
+  schedStream();
+}
+function schedStream(){
+  const gap = (CONFIG.streamMinGap + Math.random()*(CONFIG.streamMaxGap-CONFIG.streamMinGap))*1000;
+  setTimeout(nextStreamEvent, gap);
+}
+document.getElementById('scount').textContent = sCount;
+/* seed full backdated history so the log reaches the top at load */
+(function seedFeed(){
+  const n = 24;
+  for (let i=n; i>0; i--){
+    if (!sPool.length) sPool = [...CONFIG.streamEvents].sort(()=>Math.random()-0.5);
+    const [src,msg] = sPool.pop();
+    const t = new Date(Date.now() - i*(25 + Math.random()*50)*1000); // spread over recent minutes
+    const el = document.createElement('div');
+    el.className = 'sline';
+    el.style.animation = 'none'; el.style.opacity = 1; el.style.transform = 'none';
+    el.innerHTML = '<span class="ts">'+t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span>'+
+      '<span class="src '+src+'">'+(src==='claw'?'agent':src)+'</span><span class="msg">'+msg+'</span>';
+    sfeed.appendChild(el);
+  }
+})();
+schedStream();
+
+/* ===== toasts ===== */
+const toastWrap = document.getElementById('toasts');
+let tPool = [];
+function fireToast(){
+  if (!tPool.length) tPool = [...CONFIG.toasts].sort(()=>Math.random()-0.5);
+  const msg = tPool.pop();
+  const n = new Date();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = '<div class="th"><span class="dot"></span><span class="who">AI OS Agent</span>'+
+    '<span class="tt">'+n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span></div>'+
+    '<div class="tm">'+msg+'</div>';
+  toastWrap.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
+  setTimeout(()=>el.classList.add('out'), 5600);
+  setTimeout(()=>el.remove(), 6400);
+  schedToast();
+}
+function schedToast(){
+  const gap = (CONFIG.toastMinGap + Math.random()*(CONFIG.toastMaxGap-CONFIG.toastMinGap))*1000;
+  setTimeout(fireToast, gap);
+}
+setTimeout(fireToast, 6000); // first toast shortly after load
+
+/* tomorrow view */
+document.getElementById('night').innerHTML = CONFIG.overnight.map(([ts,msg,st])=>
+  '<div class="nline '+(st||'')+'"><span class="ts">'+ts+'</span><span class="msg">'+msg+'</span></div>').join('');
+document.getElementById('tmFirst').textContent = CONFIG.tomorrowFirst;
+document.getElementById('tmTop3').innerHTML = CONFIG.tomorrowTop3.map((t,i)=>
+  '<div class="prow"><span class="n">'+(i+1)+'</span><span>'+t+'</span></div>').join('');
+document.getElementById('tmMeet').innerHTML = CONFIG.tomorrowMeetings.length
+  ? CONFIG.tomorrowMeetings.map(m=>'<div class="mrow"><span class="at">'+m.at+'</span><span class="who">'+m.who+'</span></div>').join('')
+  : '<div class="mrow none">None scheduled.</div>';
+document.getElementById('tmBoom').innerHTML = CONFIG.boomerangs.map(b=>
+  '<div class="dbrow"><span class="nm">'+b.t+'</span><span class="st due">'+b.day+'</span></div>').join('');
+
+/* ===== live ticker engine ===== */
+const TK = CONFIG.ticker;
+const dayStart = new Date(); dayStart.setHours(0,0,0,0);
+const bootReal = Date.now();
+function elapsedSecs(){
+  const base = (bootReal - dayStart.getTime())/1000;
+  const since = (Date.now() - bootReal)/1000;
+  return base + since * TK.demoSpeed;
+}
+function fmtInt(n){ return Math.floor(n).toLocaleString('en-US'); }
+const els = {
+  tokens: document.getElementById('tk-tokens'),
+  cost:   document.getElementById('tk-cost'),
+  upd:    document.getElementById('tk-updates'),
+  over:   document.getElementById('tk-overdue'),
+  life:   document.getElementById('tk-life'),
+  week:   document.getElementById('tk-week'),
+  spend:  document.getElementById('tk-spend'),
+  sales:  document.getElementById('tk-sales')
+};
+els.over.textContent = TK.notionOverdue;
+let lastUpd=-1, lastLife=-1;
+
+/* --- live-state helpers --- */
+function setState(el, frac){
+  el.classList.remove('warn','crit');
+  if (frac >= TK.budgetCritAt) el.classList.add('crit');
+  else if (frac >= TK.budgetWarnAt) el.classList.add('warn');
+}
+
+/* --- notion overdue: climbs toward max, goes red at alert, Claw clears it back down --- */
+let overdue = TK.notionOverdue, overdueDir = 1;
+function tickOverdue(){
+  // biased random walk: mostly follows direction, sometimes pauses
+  const r = Math.random();
+  if (r > 0.25) overdue += overdueDir;
+  if (overdue >= TK.overdueMax){ overdue = TK.overdueMax; overdueDir = -1; }
+  if (overdue <= TK.overdueFloor){ overdue = TK.overdueFloor; overdueDir = 1; }
+  els.over.textContent = overdue;
+  els.over.classList.toggle('crit', overdue >= TK.overdueAlertAt);
+  els.over.classList.remove('bump'); void els.over.offsetWidth; els.over.classList.add('bump');
+}
+setInterval(tickOverdue, TK.overdueTickSecs * 1000);
+
+/* --- notion updates: +1 every updateTickSecs, anchored to page load --- */
+const updBase = Math.floor(TK.notionUpdatesPerDay * ((bootReal - dayStart.getTime())/1000) / 86400);
+
+function tickTape(){
+  const s = elapsedSecs();
+  const f = s / 86400;
+  const sinceLoad = (Date.now() - bootReal)/1000 * TK.demoSpeed;
+
+  els.tokens.textContent = fmtInt(TK.tokensPerDay * f);
+  setState(els.tokens, f);
+
+  els.cost.textContent = '$' + (TK.tokenCostPerDay * f).toFixed(2);
+  setState(els.cost, f);
+
+  els.spend.textContent = '$' + (TK.adSpendPerDay * f).toFixed(2);
+  setState(els.spend, f);
+
+  // sales: opens at salesStartAt, climbs at salesPerDay pace from page load
+  const sales = TK.salesStartAt + TK.salesPerDay * (sinceLoad/86400);
+  els.sales.textContent = '$' + sales.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  const upd = updBase + Math.floor(sinceLoad / TK.updateTickSecs);
+  if (upd !== lastUpd){
+    els.upd.textContent = fmtInt(upd);
+    els.upd.classList.remove('bump'); void els.upd.offsetWidth; els.upd.classList.add('bump');
+    lastUpd = upd;
+  }
+  // team tasks: +1 on a fixed schedule since page load
+  const add = Math.floor(sinceLoad / TK.tasksTickEverySecs);
+  if (add !== lastLife){
+    els.life.textContent = fmtInt(TK.tasksLifetime + add);
+    els.week.textContent = fmtInt(TK.tasksThisWeek + add);
+    els.life.classList.remove('bump'); void els.life.offsetWidth; els.life.classList.add('bump');
+    els.week.classList.remove('bump'); void els.week.offsetWidth; els.week.classList.add('bump');
+    lastLife = add;
+  }
+}
+tickTape(); setInterval(tickTape, 120);
+
+/* ===== life clock ===== */
+(function(){
+  const YEAR = 365.25*24*3600;
+  const remainAtLoad = (CONFIG.lifeExpectancy - CONFIG.currentAge) * YEAR; // seconds
+  const t0 = Date.now();
+  const y = document.getElementById('lc-y'), m = document.getElementById('lc-m'),
+        d = document.getElementById('lc-d'), sec = document.getElementById('lc-s');
+  function tick(){
+    const left = remainAtLoad - (Date.now()-t0)/1000;
+    y.textContent  = (left/YEAR).toFixed(8);
+    m.textContent  = (left/(YEAR/12)).toFixed(6);
+    d.textContent  = Math.floor(left/86400).toLocaleString('en-US') + '.' + (left/86400 % 1).toFixed(4).slice(2);
+    sec.textContent = Math.floor(left).toLocaleString('en-US');
+  }
+  tick(); setInterval(tick, 100);
+})();
+
+/* ===== quote cycler ===== */
+const qEl = document.getElementById('quote');
+let qi = Math.floor(Math.random()*CONFIG.quotes.length);
+function setQuote(){
+  const [t,a] = CONFIG.quotes[qi % CONFIG.quotes.length];
+  document.getElementById('qtext').textContent = t;
+  document.getElementById('qauthor').textContent = '— ' + a;
+}
+setQuote();
+setInterval(()=>{
+  qEl.classList.remove('show');
+  setTimeout(()=>{ qi++; setQuote(); qEl.classList.add('show'); }, 1200);
+}, 9000);
+
+/* ===== stock-style trace per ticker cell =====
+   A single dot wandering up/down like a price chart, leaving a thin
+   trailing line. Pace = volatility + speed of the walk. */
+const PACE = {
+  fast: { vol: 0.16, tick: 60 },
+  med:  { vol: 0.10, tick: 90 },
+  slow: { vol: 0.05, tick: 140 }
+};
+document.querySelectorAll('.spark').forEach((c) => {
+  const g = c.getContext('2d');
+  const pace = PACE[c.dataset.pace] || PACE.med;
+  let w, h, buf, v = 0;
+  function sz(){
+    w = c.width = c.offsetWidth*devicePixelRatio;
+    h = c.height = c.offsetHeight*devicePixelRatio;
+    const n = Math.ceil(w / (2*devicePixelRatio)) + 2;
+    buf = new Array(n).fill(0);
+  }
+  sz(); addEventListener('resize', sz);
+  setInterval(()=>{
+    // random walk with gentle mean reversion, occasional jump
+    v += (Math.random()-0.5) * pace.vol;
+    if (Math.random() < 0.03) v += (Math.random()-0.5) * pace.vol * 5;
+    v -= v * 0.03;                    // pull back toward middle
+    v = Math.max(-0.48, Math.min(0.48, v));
+    buf.push(v);
+    buf.shift();
+    g.clearRect(0,0,w,h);
+    const midY = h*0.55, span = h*0.78, dx = 2*devicePixelRatio;
+    // trailing line
+    g.lineWidth = 1.1*devicePixelRatio;
+    g.lineJoin = 'round';
+    g.strokeStyle = 'rgba(224,82,79,.75)';
+    g.beginPath();
+    for (let i=0;i<buf.length;i++){
+      const x = w - (buf.length-1-i)*dx;
+      const y = midY + buf[i]*span;
+      i ? g.lineTo(x,y) : g.moveTo(x,y);
+    }
+    g.stroke();
+    // leading dot
+    const dotY = midY + buf[buf.length-1]*span;
+    g.fillStyle = '#ff6b67';
+    g.shadowColor = '#ff6b67'; g.shadowBlur = 9;
+    g.beginPath();
+    g.arc(w-2*devicePixelRatio, dotY, 2.4*devicePixelRatio, 0, 7);
+    g.fill();
+    g.shadowBlur = 0;
+  }, pace.tick);
+});
+</script>
+
+<div class="sitebar">
+  <a class="sb-back" href="./">‹ The AI OS Agent — back to the main page</a>
+  <a class="sb-cta" href="https://shop.beacons.ai/colinstuckert/95c07a78-fae0-4be4-a731-70a566bb2e21?pageViewSource=lib_view&referrer=https%3A%2F%2Fbeacons.ai%2Fcolinstuckert&show_back_button=true">Get the Agent System →</a>
+</div>
+</body>
+</html>

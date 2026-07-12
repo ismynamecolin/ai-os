@@ -192,6 +192,15 @@ body::before{content:"";position:absolute;inset:0;pointer-events:none;
 .phone-time-right{text-align:right}
 .phone-caption{font-size:12px;color:var(--dim);margin-top:12px;text-align:center;font-style:italic}
 .phone-caption b{color:var(--gold);font-style:normal}
+
+/* explore links */
+.explore{margin-top:26px;border:2px solid var(--line2);background:var(--panel);padding:24px 26px}
+.explore .eh{font-size:clamp(20px,3vw,26px);font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cream);text-align:center;margin-bottom:16px}
+.erow{display:flex;align-items:baseline;gap:14px;padding:13px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.erow:last-child{border-bottom:none}
+.erow a{color:var(--gold);font-weight:700;font-size:16px;text-decoration:none;letter-spacing:.02em;white-space:nowrap}
+.erow a:hover{text-decoration:underline}
+.erow .ed{color:var(--dim);font-size:12.5px;flex:1;min-width:200px}
 </style>
 </head>
 <body>
@@ -721,6 +730,24 @@ body::before{content:"";position:absolute;inset:0;pointer-events:none;
   <div class="c2">AI tools, builds, and the moves that keep you valuable. Helping you win the AI age.</div>
   <div class="c3" style="margin-bottom:14px">Free · betterhumans.substack.com</div>
   <a class="btn ghost" data-link="newsletter" href="#">Join free →</a>
+</div>
+
+
+<!-- ============ EXPLORE THE SYSTEM (live links) ============ -->
+<div class="explore">
+  <div class="eh">Explore The System Live</div>
+  <div class="erow">
+    <a href="map.html">🗺️ The Full Map →</a>
+    <div class="ed">The entire operation on one giant page. Zoom in anywhere — every department, database, and routine.</div>
+  </div>
+  <div class="erow">
+    <a href="dashboard.html">📊 The AI OS Live Dashboard →</a>
+    <div class="ed">The operator day board — live metrics, activity log, deep work clock, and the Life Clock counting down.</div>
+  </div>
+  <div class="erow">
+    <a href="command-center.html">🌙 The Overnight Command Center →</a>
+    <div class="ed">What the agent's 4am-to-7am run looks like — the briefing compiling itself while you sleep.</div>
+  </div>
 </div>
 
 <div class="stickybar">
