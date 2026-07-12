@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The AI OS Agent · The Full Map</title>
+<meta name="viewport" content="width=5300, user-scalable=yes, initial-scale=0.25, minimum-scale=0.05, maximum-scale=3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THE AI OS AGENT — MASTER MAP
+   One giant blueprint canvas. Open in browser, zoom to ~100%,
+   pan while filming. Every region is its own video.
+   Structure only — no invented metrics anywhere.
+   ============================================================ */
+:root{
+  --ink:#0a0b09; --panel:#0f110e; --line:#232a24; --line2:#3a453c;
+  --teal:#2fa9a4; --teal-dim:#17504e; --gold:#e8b940; --gold-dim:#7a5f14;
+  --text:#e8ede9; --dim:#7c8a80; --cream:#f4efe3;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--ink);color:var(--text);font-family:"Spline Sans Mono",monospace;position:relative;overflow-x:auto}
+#zoomwrap{padding:80px 90px 120px;position:relative}
+body::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(47,169,164,.05) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(47,169,164,.05) 1px,transparent 1px);
+  background-size:80px 80px}
+
+/* decorative gold light streaks, mrnotion style */
+.streak{position:absolute;height:10px;background:linear-gradient(90deg,transparent,rgba(232,185,64,.55),rgba(232,185,64,.15),transparent);border-radius:5px;filter:blur(1px);pointer-events:none}
+
+/* ===== master header ===== */
+.master{border:3px double var(--text);padding:34px 60px;text-align:center;width:1720px;margin:0 auto 26px;background:var(--panel);position:relative}
+.master h1{font-size:56px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.master .sub{font-size:20px;color:var(--dim);margin-top:12px;letter-spacing:.06em}
+.master .by{font-size:16px;color:var(--gold);margin-top:10px;letter-spacing:.24em;text-transform:uppercase;font-weight:600}
+
+/* ===== columns of departments ===== */
+.cols{display:flex;gap:70px;align-items:flex-start;margin-top:90px}
+.col{flex:1;min-width:0;display:flex;flex-direction:column;gap:46px}
+
+/* department master box */
+.dept{border:2px solid var(--text);background:var(--panel)}
+.dept > .dh{border-bottom:2px solid var(--text);padding:22px 22px;text-align:center;font-size:36px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#12140f}
+.dept > .dh small{display:block;font-size:18px;color:var(--gold);font-weight:600;font-style:italic;letter-spacing:.02em;text-transform:none;margin-top:9px}
+.dept .body{padding:20px 22px;display:flex;flex-direction:column;gap:18px}
+
+/* section box inside a department */
+.sec{border:1.5px solid var(--line2)}
+.sec .sh{border-bottom:1.5px solid var(--line2);padding:12px 16px;font-size:20px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cream);display:flex;justify-content:space-between;align-items:center;gap:12px;background:#131610}
+.sec .sh em{font-style:italic;color:var(--gold);font-weight:600;text-transform:none;letter-spacing:0;font-size:13.5px;text-align:right;flex-shrink:0}
+.sec .sb{padding:12px 14px;font-size:12.5px;line-height:1.6;color:var(--text)}
+.sec .sb p{margin-bottom:8px}
+.sec .sb p:last-child{margin-bottom:0}
+.lead{font-size:17px;font-weight:700;color:var(--cream);border-left:4px solid var(--gold);padding:2px 0 2px 12px;margin-bottom:12px;line-height:1.4;font-style:italic}
+.sec.teal{border-color:var(--teal-dim)}
+.sec.teal .sh{border-color:var(--teal-dim);color:var(--teal)}
+.sec.gold{border-color:var(--gold-dim)}
+.sec.gold .sh{border-color:var(--gold-dim);color:var(--gold)}
+
+/* key-value / spec table */
+.kv{width:100%;border-collapse:collapse;font-size:12px}
+.kv td{border:1px solid var(--line2);padding:8px 10px;vertical-align:top;line-height:1.5}
+.kv td:first-child{width:31%;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;font-weight:600}
+
+/* checklist */
+.chk{list-style:none;font-size:12.5px;line-height:1.55}
+.chk li{padding:4px 0 4px 26px;position:relative}
+.chk li::before{content:"✓";position:absolute;left:0;top:3px;width:17px;height:17px;border:1.5px solid var(--teal);color:var(--teal);font-size:11px;display:flex;align-items:center;justify-content:center}
+.chk.x li::before{content:"✕";border-color:#a05252;color:#c96b6b}
+.chk.dot li::before{content:"•";border:none;color:var(--gold);font-size:18px;top:0}
+
+/* bullet list plain */
+.ul{list-style:none;font-size:12.5px;line-height:1.6}
+.ul li{padding:3px 0 3px 16px;position:relative}
+.ul li::before{content:"·";position:absolute;left:2px;color:var(--dim)}
+.ul b{color:var(--cream);font-weight:600}
+.hi{color:var(--gold);font-weight:600}
+.tl{color:var(--teal)}
+
+/* icon chips row */
+.icons{display:flex;gap:10px;flex-wrap:wrap;padding:4px 0}
+.ic{display:flex;flex-direction:column;align-items:center;gap:6px;width:88px;text-align:center}
+.ic .g{width:52px;height:52px;border:1.5px solid var(--line2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;background:#141712}
+.ic .t{font-size:10px;color:var(--dim);line-height:1.35}
+
+/* flow arrows (vertical) */
+.varrow{display:flex;justify-content:center;padding:2px 0}
+.varrow::after{content:"↓";color:var(--dim);font-size:18px}
+
+/* org chart top: YOU -> AGENT -> memory (drawn with borders) */
+.org{width:1720px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.node{border:2px solid var(--text);background:var(--panel);padding:16px 34px;text-align:center}
+.node .n1{font-size:22px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.node .n2{font-size:12px;color:var(--dim);margin-top:5px}
+.node.agent{border-color:var(--gold);box-shadow:0 0 40px rgba(232,185,64,.15)}
+.node.agent .n1{color:var(--gold)}
+.stem{width:2px;height:34px;background:var(--line2)}
+.rail{height:2px;background:var(--line2);width:1560px;position:relative}
+.drops{display:flex;justify-content:space-between;width:1560px}
+.drop{display:flex;flex-direction:column;align-items:center;width:236px}
+.drop .stem{height:26px}
+.dbnode{border:1.5px solid var(--teal-dim);background:var(--panel);padding:10px 12px;text-align:center;width:100%}
+.dbnode .d1{font-size:13.5px;font-weight:700;color:var(--teal);letter-spacing:.04em}
+.dbnode .d2{font-size:10.5px;color:var(--dim);margin-top:4px;line-height:1.4}
+
+/* timeline strip */
+.timeline{margin-top:90px;border:2px solid var(--text);background:var(--panel)}
+.timeline .dh{border-bottom:2px solid var(--text);padding:16px 22px;text-align:center;font-size:22px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:#12140f}
+.tl-row{display:flex}
+.tl-cell{flex:1;border-right:1.5px solid var(--line2);padding:16px 16px 20px;min-height:150px}
+.tl-cell:last-child{border-right:none}
+.tl-cell .tt{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px}
+.tl-cell .td{font-size:11.5px;line-height:1.55;color:var(--text)}
+.tl-cell.you{background:rgba(47,169,164,.05)}
+.tl-cell .who{display:inline-block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);padding:2px 7px;margin-bottom:7px;color:var(--dim)}
+.tl-cell .who.a{color:var(--gold);border-color:var(--gold-dim)}
+.tl-cell .who.y{color:var(--teal);border-color:var(--teal-dim)}
+
+/* footer CTA row */
+.footer{display:flex;gap:60px;margin-top:80px;align-items:stretch}
+.cta{flex:1;border:2px solid var(--gold);padding:28px 30px;text-align:center;background:rgba(232,185,64,.05);display:flex;flex-direction:column;justify-content:center}
+.cta .c1{font-size:27px;font-weight:700;letter-spacing:.05em;color:var(--gold);line-height:1.3}
+.cta .c2{font-size:15px;color:var(--text);margin-top:10px;line-height:1.5}
+.cta .c3{font-size:12.5px;color:var(--dim);margin-top:8px}
+.cta.teal2{border-color:var(--teal);background:rgba(47,169,164,.05)}
+.cta.teal2 .c1{color:var(--teal)}
+.notbox{flex:1;border:2px solid var(--text);background:var(--panel);padding:24px 30px}
+.notbox .nh{font-size:19px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-align:center;margin-bottom:14px}
+.notbox ul{list-style:none;font-size:14.5px;line-height:1.6}
+.notbox li{padding:5px 0 5px 30px;position:relative}
+.notbox li::before{content:"✕";position:absolute;left:0;top:6px;width:18px;height:18px;border:1.5px solid #a05252;color:#c96b6b;font-size:11px;display:flex;align-items:center;justify-content:center}
+.notbox li.yes::before{content:"✓";border-color:var(--gold);color:var(--gold)}
+.notbox li b{color:var(--cream)}
+
+.skills{margin:90px auto 0;border:2px solid var(--text);background:var(--panel);padding:44px 50px 50px;text-align:center}
+.skh{font-size:44px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cream)}
+.sksub{font-size:22px;color:var(--gold);font-style:italic;font-weight:600;margin-top:10px}
+.skgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:36px;text-align:left}
+.skitem{border:1.5px solid var(--line2);background:#131610;padding:22px 24px;position:relative}
+.ske{position:absolute;top:18px;right:18px;font-size:26px;opacity:.9}
+.skt{font-size:27px;font-weight:700;color:var(--cream)}
+.skd{font-size:15px;color:var(--dim);margin-top:7px}
+.action{margin-top:90px;border:2px solid var(--text);background:var(--panel);padding:44px 50px 54px}
+.action .ah{font-size:44px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cream);text-align:center}
+.action .asub{font-size:22px;color:var(--gold);font-style:italic;font-weight:600;margin-top:10px;text-align:center}
+.action .arow{display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:44px;margin-top:40px;align-items:start}
+.action .acap{font-size:15px;color:var(--dim);margin-top:12px;text-align:center;font-style:italic}
+.action .acap b{color:var(--gold);font-style:normal}
+/* custom product card (replaces screenshot) */
+.prod{border:2px solid var(--line2);background:#101309}
+.prod .ph{padding:22px 26px;border-bottom:1.5px solid var(--line2)}
+.prod .ph .pt{font-size:30px;font-weight:700;color:var(--cream)}
+.prod .ph .pt span{color:var(--gold)}
+.prod .ph .pd{font-size:13.5px;color:var(--dim);margin-top:7px;line-height:1.5}
+.prod .ph .pd b{color:var(--teal)}
+.ptabs{display:flex;gap:10px;padding:12px 26px;border-bottom:1.5px solid var(--line2)}
+.ptab{font-size:11.5px;letter-spacing:.06em;padding:6px 14px;border:1.5px solid var(--line2);color:var(--dim)}
+.ptab.on{background:var(--teal-dim);border-color:var(--teal);color:var(--teal)}
+.prow{display:grid;grid-template-columns:150px 1fr 1fr;border-bottom:1px solid var(--line);align-items:center}
+.prow:last-child{border-bottom:none}
+.prow > div{padding:13px 16px;font-size:13px;line-height:1.45}
+.prow .tag{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;display:inline-block}
+.tag.start{background:rgba(232,185,64,.14);color:var(--gold);border:1px solid var(--gold-dim)}
+.tag.watch{background:rgba(47,169,164,.1);color:var(--teal);border:1px solid var(--teal-dim)}
+.tag.core{background:rgba(47,169,164,.16);color:var(--teal);border:1px solid var(--teal)}
+.tag.bonus{background:rgba(232,185,64,.08);color:var(--gold);border:1px solid var(--gold-dim)}
+.prow .dn{font-weight:700;color:var(--cream)}
+.prow .dw{color:var(--dim);font-size:12px}
+.prow.hl{background:rgba(232,185,64,.05)}
+.pcall{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.04em;white-space:nowrap}
+.pcall::before{content:"⟵ ";}
+
+.phone-demos{display:grid;grid-template-columns:1fr 1fr;gap:34px;max-width:760px;width:100%}
+@media(max-width:640px){.phone-demos{grid-template-columns:1fr}}
+.phone{display:flex;flex-direction:column;align-items:center}
+.phone-header,.phone-body{width:100%;background:#121411;color:var(--text);border:1.5px solid var(--line2)}
+.phone-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:none;border-radius:22px 22px 0 0}
+.phone-back{color:var(--teal);font-size:20px;line-height:1}
+.phone-title{flex:1}
+.phone-name{font-size:13.5px;font-weight:700;color:var(--cream);letter-spacing:.02em}
+.phone-status{font-size:10px;color:var(--teal);letter-spacing:.14em;text-transform:uppercase}
+.phone-avatar{width:32px;height:32px;border:1.5px solid var(--gold-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;background:#181a15}
+.phone-body{border-top:1px solid var(--line);border-radius:0 0 22px 22px;padding:14px 12px 16px;display:flex;flex-direction:column;gap:10px;min-height:340px}
+.phone-msg{max-width:92%;padding:10px 12px;font-size:11.5px;line-height:1.55;border-radius:12px}
+.phone-msg-user{align-self:flex-end;background:var(--teal-dim);color:#dff5f3;border-radius:12px 12px 3px 12px}
+.phone-msg-bot{align-self:flex-start;background:#1a1d18;border:1px solid var(--line);border-radius:12px 12px 12px 3px}
+.phone-section-title{font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--gold);margin-bottom:5px;text-transform:uppercase}
+.phone-section-title:not(:first-child){margin-top:10px}
+.phone-list{list-style:none;margin:0 0 2px}
+.phone-list li{padding:2.5px 0 2.5px 14px;position:relative;color:var(--text)}
+.phone-list li::before{content:"·";position:absolute;left:2px;color:var(--teal)}
+.phone-text{color:var(--text)}
+.phone-text strong{color:var(--cream);font-weight:700}
+.phone-quote{border-left:2.5px solid var(--gold);padding-left:9px;color:var(--dim);font-style:italic;margin-top:6px}
+.phone-check{color:var(--teal);font-weight:700}
+.phone-divider{height:1px;background:var(--line);margin:9px 0}
+.phone-time{font-size:9px;color:var(--dim);margin-top:7px}
+.phone-time-right{text-align:right}
+.phone-caption{font-size:12px;color:var(--dim);margin-top:12px;text-align:center;font-style:italic}
+.phone-caption b{color:var(--gold);font-style:normal}
+</style>
+</head>
+<body>
+<div class="zoomctl">
+  <button onclick="zset(z*1.25)">+</button>
+  <button onclick="zset(z/1.25)">−</button>
+  <button onclick="zfit()" style="font-size:11px;letter-spacing:.08em">FIT</button>
+  <button onclick="zset(1)" style="font-size:11px">100%</button>
+</div>
+<div id="zoomwrap">
+
+<!-- gold streaks -->
+<div class="streak" style="top:1280px;left:520px;width:820px"></div>
+<div class="streak" style="top:2260px;left:2900px;width:1050px"></div>
+<div class="streak" style="top:760px;left:3620px;width:700px"></div>
+<div class="streak" style="top:2960px;left:1500px;width:900px"></div>
+
+<!-- ============ MASTER HEADER + ORG SPINE ============ -->
+<div class="master">
+  <h1>The AI OS Agent — Master Map</h1>
+  <div class="sub">One agent. Six databases. Your whole operation on a single page.</div>
+  <div class="by">by Colin Stuckert · Use AI. Stay Human.</div>
+</div>
+
+<div class="org">
+  <div class="node">
+    <div class="n1">You · The Operator</div>
+    <div class="n2">Decide · Create · Sell — everything else is delegated below this line</div>
+  </div>
+  <div class="stem"></div>
+  <div class="node agent">
+    <div class="n1">The AI OS Agent</div>
+    <div class="n2">Telegram interface · AI engine · Notion memory · works 24/7</div>
+  </div>
+  <div class="stem"></div>
+  <div class="rail"></div>
+  <div class="drops">
+    <div class="drop"><div class="stem"></div><div class="dbnode"><div class="d1">🦞 Work Tasks</div><div class="d2">every commitment, ranked &amp; dated</div></div></div>
+    <div class="drop"><div class="stem"></div><div class="dbnode"><div class="d1">🦞 Personal DB</div><div class="d2">life admin, health, home</div></div></div>
+    <div class="drop"><div class="stem"></div><div class="dbnode"><div class="d1">🦞 CRM</div><div class="d2">people, deals, follow-ups</div></div></div>
+    <div class="drop"><div class="stem"></div><div class="dbnode"><div class="d1">🦞 Financial Dashboard</div><div class="d2">money in one view</div></div></div>
+    <div class="drop"><div class="stem"></div><div class="dbnode"><div class="d1">🦞 Personal Index</div><div class="d2">reference · SOPs · links</div></div></div>
+    <div class="drop"><div class="stem"></div><div class="dbnode"><div class="d1">🦞 MY Tracker</div><div class="d2">the team's work, watched</div></div></div>
+  </div>
+</div>
+
+
+<!-- ============ THE SKILLS ============ -->
+<div class="skills">
+  <div class="skh">The Skills</div>
+  <div class="sksub">Spend less time managing work. More time getting it done.</div>
+  <div class="skgrid">
+<div class="skitem"><span class="ske">📅</span><div class="skt">Calendar</div><div class="skd">invites, reminders, conflicts caught</div></div>
+<div class="skitem"><span class="ske">✉️</span><div class="skt">Email</div><div class="skd">triage, drafts, chase the reply</div></div>
+<div class="skitem"><span class="ske">💬</span><div class="skt">Slack Messages</div><div class="skd">send it, follow it, report back</div></div>
+<div class="skitem"><span class="ske">🔁</span><div class="skt">Follow-Up</div><div class="skd">nothing slips. ever.</div></div>
+<div class="skitem"><span class="ske">🤝</span><div class="skt">CRM</div><div class="skd">every contact touched on time</div></div>
+<div class="skitem"><span class="ske">🔎</span><div class="skt">Research + AI Tasks</div><div class="skd">on demand, any topic</div></div>
+<div class="skitem"><span class="ske">🗂️</span><div class="skt">Databases Updated</div><div class="skd">fully current, 24/7</div></div>
+<div class="skitem"><span class="ske">✅</span><div class="skt">Projects & Tasks</div><div class="skd">always ranked, always on top</div></div>
+  </div>
+</div>
+
+<!-- ============ DEPARTMENT COLUMNS ============ -->
+<div class="cols">
+
+  <!-- ================= COL 1: THE OPERATOR ================= -->
+  <div class="col">
+    <div class="dept">
+      <div class="dh">I. The Operator<small>"I only do what only I can do."</small></div>
+      <div class="body">
+
+        <div class="sec teal">
+          <div class="sh">What I still do <em>the short list</em></div>
+          <div class="sb">
+            <div class="lead">Four jobs. That's the whole job now.</div>
+            <ul class="chk">
+              <li><b>Decide</b> — priorities, offers, direction</li>
+              <li><b>Create</b> — content, products, ideas</li>
+              <li><b>Sell</b> — deals, partnerships, audience</li>
+              <li><b>Relationships</b> — the calls only I can take</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sh">What I never do anymore <em>delegated to the agent</em></div>
+          <div class="sb">
+            <div class="lead">Everything on this list used to eat my mornings.</div>
+            <ul class="chk x">
+              <li>Re-sort my task list every morning</li>
+              <li>Remember follow-ups ("I'll reply Friday")</li>
+              <li>Update Notion by hand after every task</li>
+              <li>Chase the team for status updates</li>
+              <li>Write my own daily plan from memory</li>
+              <li>Scan the calendar for conflicts</li>
+              <li>Archive stale and duplicate tasks</li>
+              <li>Keep 47 tabs open to feel "on top of it"</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec gold">
+          <div class="sh">How I talk to the system <em>one channel</em></div>
+          <div class="sb">
+            <div class="lead">One text thread runs the whole operation.</div>
+            <table class="kv">
+              <tr><td>Channel</td><td>Telegram — same thread, 24/7. Voice or text.</td></tr>
+              <tr><td>Grammar</td><td>Plain English. "Push the Loom review to tomorrow." "Set a call with Tyler at 3, send the invite." "Remind me Friday about the affiliate deal."</td></tr>
+              <tr><td>Reply</td><td>"Done ✓" + what changed. No app-opening. No forms.</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sh">Signal vs Noise <em>the daily filter</em></div>
+          <div class="sb">
+            <div class="lead">If it isn't Gold, it doesn't touch the morning.</div>
+            <ul class="ul">
+              <li><b>The One Thing</b> → protected deep-work block, phone away</li>
+              <li><b>Top 3 (Gold)</b> → must move today</li>
+              <li><b>Silver / Bronze</b> → agent schedules around the Gold</li>
+              <li><b>Everything else</b> → boomeranged to a future date or killed</li>
+            </ul>
+            <p style="margin-top:10px;color:var(--dim)">Rule: if it isn't Gold, it doesn't touch the morning.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= COL 2: THE AGENT BRAIN ================= -->
+  <div class="col">
+    <div class="dept">
+      <div class="dh">II. The Agent Brain<small>"The engine that never sleeps."</small></div>
+      <div class="body">
+
+        <div class="sec">
+          <div class="sh">Anatomy <em>inputs → memory → routines → outputs</em></div>
+          <div class="sb">
+            <div class="lead">Messages in. Order out.</div>
+            <table class="kv">
+              <tr><td>Inputs</td><td>Your Telegram messages · calendar · email flags · database changes by the team</td></tr>
+              <tr><td>Memory</td><td>The six Notion databases. Nothing lives in chat history — <span class="hi">Notion is permanent</span>, chat is temporary.</td></tr>
+              <tr><td>Reasoning</td><td>AI engine (Claude — or any AI on day one). Reads the databases, applies the rules, proposes actions.</td></tr>
+              <tr><td>Outputs</td><td>DB updates · briefings · reports · calendar invites · drafts · flags</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec teal">
+          <div class="sh">The Daily Routines <em>runs whether you show up or not</em></div>
+          <div class="sb">
+            <div class="lead">This schedule runs whether I show up or not.</div>
+            <table class="kv">
+              <tr><td>04:00</td><td><b>Overnight run</b> — scan every DB, resort priorities, rebuild the Gold queue, archive stale tasks, dedupe</td></tr>
+              <tr><td>07:00</td><td><b>Morning briefing → Telegram</b> — top 3, flags, boomerangs returning, calendar shape of the day</td></tr>
+              <tr><td>All day</td><td><b>Live sync</b> — every instruction lands in the right DB in seconds; confirmations back to you</td></tr>
+              <tr><td>18:00</td><td><b>EOD report</b> — closed / pushed / blocked, with why</td></tr>
+              <tr><td>Weekly</td><td><b>Ops report</b> — pipeline health, bottlenecks by person and stage, suggested fixes</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec gold">
+          <div class="sh">The Boomerang Engine <em>the signature mechanic</em></div>
+          <div class="sb">
+            <div class="lead">I never remember anything. It comes back on its own.</div>
+            <ul class="ul">
+              <li>Task captured → ranked <span class="hi">Gold / Silver / Bronze / Next</span></li>
+              <li>Not for today? → <b>boomeranged</b> with a return date</li>
+              <li>It leaves your view entirely — <span class="tl">zero mental load</span></li>
+              <li>On the return date it resurfaces in the briefing, automatically</li>
+              <li>Nothing is ever "remembered" by you. It's <b>scheduled to come back</b>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sh">The Flag Raiser <em>the part that watches</em></div>
+          <div class="sb">
+            <div class="lead">The system checks itself. Then it tells me.</div>
+            <ul class="ul">
+              <li>Task sitting in <b>Waiting On</b> too long → flagged in your briefing</li>
+              <li>Pipeline stage running behind → named in the weekly report</li>
+              <li>Deal with no reply after days → "draft a follow-up?"</li>
+              <li>Calendar conflict forming → surfaced before it bites</li>
+            </ul>
+            <p style="margin-top:10px;color:var(--dim)">You don't check the system. The system checks itself — and tells you.</p>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sh">The Stack <em>boring on purpose</em></div>
+          <div class="sb">
+            <div class="lead">Four boring tools. One smart glue.</div>
+            <div class="icons">
+              <div class="ic"><div class="g">✈️</div><div class="t">Telegram<br>the interface</div></div>
+              <div class="ic"><div class="g">🗂️</div><div class="t">Notion<br>the memory</div></div>
+              <div class="ic"><div class="g">✳️</div><div class="t">Claude / any AI<br>the reasoning</div></div>
+              <div class="ic"><div class="g">📅</div><div class="t">Calendar<br>the clock</div></div>
+              <div class="ic"><div class="g">🦞</div><div class="t">The Agent<br>the glue</div></div>
+            </div>
+            <p style="margin-top:8px"><b>Floor:</b> works day one with any AI — talk to your system immediately.<br><b>Ceiling:</b> your own 24/7 agent (~30 min guided setup) when you're ready.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= COL 3: THE MEMORY (DATABASES) ================= -->
+  <div class="col">
+    <div class="dept">
+      <div class="dh">III. The Memory<small>"If it's not in a database, it doesn't exist."</small></div>
+      <div class="body">
+
+        <div class="sec teal">
+          <div class="sh">🦞 Work Tasks <em>the main engine</em></div>
+          <div class="sb">
+            <table class="kv">
+              <tr><td>Holds</td><td>Every work commitment — projects, tasks, deliverables</td></tr>
+              <tr><td>Fields</td><td>Status (Not Started / In Progress / Waiting On / Done) · Priority (Gold / Silver / Bronze / Next) · Owner · Due · Boomerang date</td></tr>
+              <tr><td>Agent does</td><td>Resorts nightly · flags stalls · builds the Gold queue · feeds the briefing</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec teal">
+          <div class="sh">🦞 Personal DB <em>life runs on the same rails</em></div>
+          <div class="sb">
+            <table class="kv">
+              <tr><td>Holds</td><td>Life admin, health, home, errands, family commitments</td></tr>
+              <tr><td>Agent does</td><td>Same treatment as work — ranked, boomeranged, briefed. Life stops leaking into work hours.</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec teal">
+          <div class="sh">🦞 CRM <em>relationships with a memory</em></div>
+          <div class="sb">
+            <table class="kv">
+              <tr><td>Holds</td><td>People, deals, partnerships, sponsor conversations</td></tr>
+              <tr><td>Agent does</td><td>Tracks last touch · surfaces "no reply in X days" · offers to draft the follow-up · boomerangs every promise you make</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec teal">
+          <div class="sh">🦞 Financial Dashboard <em>money in one view</em></div>
+          <div class="sb">
+            <table class="kv">
+              <tr><td>Holds</td><td>Accounts, subscriptions, renewals, money tasks</td></tr>
+              <tr><td>Agent does</td><td>Renewal reminders before they hit · money to-dos ranked with everything else</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec teal">
+          <div class="sh">🦞 Personal Index <em>the reference shelf</em></div>
+          <div class="sb">
+            <table class="kv">
+              <tr><td>Holds</td><td>SOPs, links, docs, how-tos, credentials pointers</td></tr>
+              <tr><td>Agent does</td><td>Answers "where is…" instantly · attaches the right link to the right task</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec teal">
+          <div class="sh">🦞 MY Tracker <em>the team, watched</em></div>
+          <div class="sb">
+            <table class="kv">
+              <tr><td>Holds</td><td>Every teammate's tasks and stage — content pipeline included</td></tr>
+              <tr><td>Agent does</td><td>Watches throughput · names bottlenecks in the weekly report · you stop chasing status</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="sec gold">
+          <div class="sh">The rule that makes it work <em>read this twice</em></div>
+          <div class="sb">
+            <p><span class="hi">If it's not in a database, it doesn't exist.</span></p>
+            <p style="color:var(--dim)">No sticky notes. No "I'll remember." No second system. One brain, six lobes, zero leaks.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= COL 4: OUTPUTS + GUARDRAILS ================= -->
+  <div class="col">
+    <div class="dept">
+      <div class="dh">IV. The Output Rails<small>"The system reports to me. Not the other way around."</small></div>
+      <div class="body">
+
+        <div class="sec gold">
+          <div class="sh">07:00 · The Morning Briefing</div>
+          <div class="sb">
+            <div class="lead">My day arrives before my alarm does.</div>
+            <ul class="ul">
+              <li>"Here's your day." — <b>Top 3, ranked</b></li>
+              <li>Flags attached ("clips waiting on editing, day 3")</li>
+              <li>Boomerangs returning today</li>
+              <li>The calendar's shape — where the deep work fits</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sh">All day · Confirmations</div>
+          <div class="sb">
+            <div class="lead">Delegation takes ten seconds now.</div>
+            <ul class="ul">
+              <li>You: "Call with Tyler 3pm, 30 min, send invite + reminder"</li>
+              <li>Agent: <span class="tl">"Invite sent. Reminder set. ✓"</span></li>
+              <li>Every instruction → the right database → confirmation. Seconds.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec gold">
+          <div class="sh">18:00 · The EOD Report</div>
+          <div class="sb">
+            <div class="lead">Closed. Pushed. Blocked. With reasons.</div>
+            <ul class="ul">
+              <li>Closed · pushed · blocked — with the why</li>
+              <li>What moved without you touching it</li>
+              <li>Tomorrow's Gold queue, already built</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec gold">
+          <div class="sh">Weekly · The Ops Report</div>
+          <div class="sb">
+            <div class="lead">It watches the team so I don't have to chase anyone.</div>
+            <ul class="ul">
+              <li>Pipeline health by stage and person</li>
+              <li>Bottlenecks named ("editing is the constraint — 3 weeks straight")</li>
+              <li>Suggested fixes, waiting on your yes/no</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sh">Global Guardrails <em>the rules of the road</em></div>
+          <div class="sb">
+            <div class="lead">The agent proposes. I decide.</div>
+            <ul class="chk">
+              <li><b>Human approves sends.</b> The agent drafts; you decide.</li>
+              <li><b>Everything is logged.</b> Every action lands in Notion, visible.</li>
+              <li><b>One source of truth.</b> No shadow lists, no parallel systems.</li>
+              <li><b>Agent proposes, operator disposes.</b> It flags and suggests — direction stays human.</li>
+              <li><b>Real data only.</b> The system reports what happened, never what sounds good.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="sec teal">
+          <div class="sh">The Delegation Flow <em>one message, end to end</em></div>
+          <div class="sb" style="text-align:center">
+            <div class="lead" style="text-align:left">One line of text, end to end.</div>
+            <p><b>You text one line</b></p><div class="varrow"></div>
+            <p>Agent parses intent</p><div class="varrow"></div>
+            <p>Action: DB update · calendar · boomerang · draft</p><div class="varrow"></div>
+            <p><span class="tl">"Done ✓"</span> back to your phone</p><div class="varrow"></div>
+            <p style="color:var(--dim)">Logged in Notion. Forever findable.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ TIMELINE STRIP: A DAY INSIDE THE SYSTEM ============ -->
+<div class="timeline">
+  <div class="dh">V. A Day Inside The System<small style="display:block;font-size:18px;color:var(--gold);font-weight:600;font-style:italic;text-transform:none;letter-spacing:.02em;margin-top:9px">"I work 4 focused hours. It works 24."</small></div>
+  <div class="tl-row">
+    <div class="tl-cell"><div class="tt">04:00</div><span class="who a">Agent</span><div class="td">Overnight run. Every DB scanned, priorities resorted, Gold queue rebuilt, stale tasks archived.</div></div>
+    <div class="tl-cell"><div class="tt">07:00</div><span class="who a">Agent</span><div class="td">Morning briefing lands in Telegram. Top 3, flags, boomerangs returning. You haven't opened an app.</div></div>
+    <div class="tl-cell you"><div class="tt">08:00</div><span class="who y">You</span><div class="td">Deep work on the One Thing. Phone away. The system holds everything else.</div></div>
+    <div class="tl-cell you"><div class="tt">10:30</div><span class="who y">You</span><div class="td">Delegate by text between blocks: reschedule, assign, boomerang. Ten seconds each. "Done ✓"</div></div>
+    <div class="tl-cell"><div class="tt">All day</div><span class="who a">Agent</span><div class="td">Notion updates itself as you and the team work. Statuses flip, dates move, flags raise.</div></div>
+    <div class="tl-cell you"><div class="tt">15:00</div><span class="who y">You</span><div class="td">The call that mattered — booked by one text this morning, reminder fired automatically.</div></div>
+    <div class="tl-cell"><div class="tt">18:00</div><span class="who a">Agent</span><div class="td">EOD report: closed, pushed, blocked — with reasons. Tomorrow's queue already built.</div></div>
+    <div class="tl-cell"><div class="tt">22:00</div><span class="who a">Agent</span><div class="td">You're off. It isn't. Tomorrow's briefing is already compiling.</div></div>
+  </div>
+</div>
+
+
+<div class="action">
+  <div class="ah">See It In Action</div>
+  <div class="asub">Left: the agent on your phone. Right: the system in your Notion.</div>
+  <div class="arow">
+
+
+  <!-- PHONE 1: the 7am briefing -->
+  <div class="phone">
+    <div class="phone-header">
+      <div class="phone-back">‹</div>
+      <div class="phone-title">
+        <div class="phone-name">The AI OS Agent</div>
+        <div class="phone-status">● online · agent</div>
+      </div>
+      <div class="phone-avatar">🦞</div>
+    </div>
+    <div class="phone-body">
+      <div class="phone-msg phone-msg-bot">
+        <div class="phone-section-title">☀️ Morning Briefing</div>
+        <p class="phone-text">Morning. Here's your day.</p>
+
+        <div class="phone-section-title">🥇 Top 3 · Gold</div>
+        <ul class="phone-list">
+          <li>Funnel page copy — due today, draft in Work DB</li>
+          <li>Landing page A/B results — review before noon</li>
+          <li>Record 3 short-form videos</li>
+        </ul>
+
+        <div class="phone-section-title">⚠️ Flags</div>
+        <ul class="phone-list">
+          <li>Clips batch Waiting On editing — day 3</li>
+        </ul>
+
+        <div class="phone-section-title">🪃 Boomerangs Back Today</div>
+        <ul class="phone-list">
+          <li>Affiliate follow-up — returns from Friday</li>
+        </ul>
+
+        <div class="phone-divider"></div>
+        <p class="phone-text">📅 Calendar clear until <strong>3:00 PM</strong>. Deep work fits 8–11.</p>
+        <div class="phone-time">7:00 AM</div>
+      </div>
+    </div>
+    <div class="phone-caption">The briefing arrives <b>before your alarm does.</b></div>
+  </div>
+
+  <!-- PHONE 2: delegate by text -->
+  <div class="phone">
+    <div class="phone-header">
+      <div class="phone-back">‹</div>
+      <div class="phone-title">
+        <div class="phone-name">The AI OS Agent</div>
+        <div class="phone-status">● online · agent</div>
+      </div>
+      <div class="phone-avatar">🦞</div>
+    </div>
+    <div class="phone-body">
+      <div class="phone-msg phone-msg-user">
+        <p class="phone-text">Set a call with Tyler at 3pm, 30 min. Send the invite with a reminder.</p>
+        <div class="phone-time phone-time-right">10:42 AM</div>
+      </div>
+      <div class="phone-msg phone-msg-bot">
+        <p class="phone-text"><span class="phone-check">✓ Done.</span> Invite sent to <strong>Tyler</strong> — 3:00 PM, 30 min. Reminder set for 2:30.</p>
+        <div class="phone-time">10:42 AM</div>
+      </div>
+      <div class="phone-msg phone-msg-user">
+        <p class="phone-text">Push the Loom review to tomorrow. Remind me Friday about the affiliate deal.</p>
+        <div class="phone-time phone-time-right">10:43 AM</div>
+      </div>
+      <div class="phone-msg phone-msg-bot">
+        <p class="phone-text"><span class="phone-check">✓ Work DB updated</span> — Loom review → tomorrow.</p>
+        <p class="phone-text"><span class="phone-check">✓ Boomeranged</span> — affiliate deal returns <strong>Friday</strong>.</p>
+        <p class="phone-quote">It's out of your head now. It comes back on its own.</p>
+        <div class="phone-time">10:43 AM</div>
+      </div>
+    </div>
+    <div class="phone-caption">Delegation takes <b>ten seconds.</b></div>
+  </div>
+
+
+    <div>
+      <div class="prod">
+      <div class="ph">
+        <div class="pt">⚡ AI Work <span>OS</span></div>
+        <div class="pd">End 40-tab AI chaos → <b>one system</b> that runs your work and projects → build your Moat for the AI Age</div>
+      </div>
+      <div class="ptabs"><span class="ptab on">▦ Dash (Customer view)</span><span class="ptab">▦ Dash</span></div>
+      <div class="prow">
+        <div><span class="tag start">🥇 Start Here</span></div>
+        <div class="dn">👋 Start Here Guide</div>
+        <div class="dw">Onboarding — talking to your system in minutes</div>
+      </div>
+      <div class="prow hl">
+        <div><span class="tag watch">🎥 Watch</span></div>
+        <div class="dn">🧭 DB 1 — The Work Database <span class="pcall">your projects</span></div>
+        <div class="dw">Projects-only database. Everything you're building.</div>
+      </div>
+      <div class="prow hl">
+        <div><span class="tag watch">🎥 Watch</span></div>
+        <div class="dn">🔁 DB 2 — Personal &amp; Tasks Database <span class="pcall">the Boomerang System</span></div>
+        <div class="dw">Tasks, calls, emails — deferred and returned on schedule</div>
+      </div>
+      <div class="prow hl">
+        <div><span class="tag core">🟩 Core DB</span></div>
+        <div class="dn">🧠 DB 3 — The AI Skills Database <span class="pcall">essential AI skills</span></div>
+        <div class="dw">AI + training — the skills that make the agent useful</div>
+      </div>
+      <div class="prow">
+        <div><span class="tag bonus">🎁 Bonus</span></div>
+        <div class="dn">💡 Bonus DB: Content</div>
+        <div class="dw">A simple content-ideas engine</div>
+      </div>
+      <div class="prow">
+        <div><span class="tag bonus">🎁 Bonus</span></div>
+        <div class="dn">🦅 Bonus DB: Agent DBs — Finances, Health, Life, Personal</div>
+        <div class="dw">The full agent database set, ready to run</div>
+      </div>
+    </div>
+      <div class="acap">The <b>AI Work OS dashboard</b> — what installs into your Notion.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FOOTER: POSITIONING + DUAL CTA ============ -->
+<div class="footer">
+  <div class="notbox">
+    <div class="nh">What this is not</div>
+    <ul>
+      <li><b>Not a chatbot.</b> Chatbots forget everything you tell them.</li>
+      <li><b>Not a template.</b> Templates arrive empty and stay empty.</li>
+      <li><b>Not a course.</b> Courses never get finished.</li>
+      <li class="yes"><b>The fourth option:</b> a system with an agent inside it.</li>
+    </ul>
+  </div>
+  <div class="cta">
+    <div class="c1">Comment or DM me the word "OS"</div>
+    <div class="c2">I'll send you the full AI Agent OS system. Works with any AI on day one. Your own agent when you're ready.</div>
+    <div class="c3">The AI OS Agent · by Colin Stuckert</div>
+  </div>
+  <div class="cta teal2">
+    <div class="c1">Comment or DM me the word "MOAT"</div>
+    <div class="c2">Free Better Human newsletter. AI tools, builds, and the moves that keep you valuable. Helping you win the AI age.</div>
+    <div class="c3">Free · 4x per week</div>
+  </div>
+</div>
+
+</div>
+<style>
+.zoomctl{position:fixed;top:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.zoomctl button{width:46px;height:46px;background:#12140f;border:1.5px solid #3a453c;color:#e8ede9;
+  font-family:"Spline Sans Mono",monospace;font-size:22px;font-weight:700;cursor:pointer}
+.zoomctl button:hover{border-color:#e8b940;color:#e8b940}
+#zoomwrap{transform-origin:0 0;width:5300px}
+</style>
+<script>
+let z = 1;
+function zset(v){
+  z = Math.max(0.06, Math.min(3, v));
+  const w = document.getElementById('zoomwrap');
+  w.style.transform = 'scale(' + z + ')';
+  document.body.style.width = (5300*z) + 'px';
+  document.body.style.height = (w.getBoundingClientRect().height) + 'px';
+}
+function zfit(){ zset((window.innerWidth - 20) / 5300); }
+if (window.innerWidth > 700 && !('ontouchstart' in window)) zfit();
+addEventListener('wheel', e => {
+  if (e.ctrlKey || e.metaKey){ e.preventDefault(); zset(z * (e.deltaY < 0 ? 1.12 : 0.9)); }
+}, {passive:false});
+</script>
+</body>
+</html>
